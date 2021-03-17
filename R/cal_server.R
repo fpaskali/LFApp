@@ -806,7 +806,8 @@ cal_server <- function( input, output, session ) {
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
            file = paste0(PATH.OUT,"/CalibrationData.RData"))
       
-      file.copy(from = "CalibrationAnalysis.Rmd",
+      file.copy(from = system.file("markdown", "CalibrationAnalysis.Rmd",
+                                   package = "LFApp"),
                 to = paste0(PATH.OUT, "/CalibrationAnalysis.Rmd"))
       rmarkdown::render(input = paste0(PATH.OUT, "/CalibrationAnalysis.Rmd"),
                         output_file = paste0(PATH.OUT, "/CalibrationAnalysis.html"))

@@ -111,6 +111,10 @@ We save the results.
 save(AIC.fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/CalibrationResults.RData"))
 ```
 
+# Save Model
+```{r}
+saveRDS(AIC.fit, file = "CalibrationModel.rds")
+```
 
 # Software
 

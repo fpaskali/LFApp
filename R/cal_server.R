@@ -823,9 +823,9 @@ cal_server <- function( input, output, session ) {
       
       if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
         MODEL <- paste0("lm(",FORMULA,", data=calData)")
-      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
+      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
         MODEL <- paste0("loess(",FORMULA,", data=calData)")
-      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
+      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
         MODEL <- paste0("gam(",FORMULA,"calData)")
       } else {
         output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");

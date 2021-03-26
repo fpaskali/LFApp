@@ -5,6 +5,7 @@
 #' @import shiny
 #' @import shinyjs
 #' @import stats
+#' @import mgcv
 #' @importFrom EBImage otsu readImage colorMode
 #' @importFrom fs path_home dir_create
 #' @importFrom DT DTOutput renderDT datatable
@@ -245,18 +246,13 @@ analysis_ui <- function(request) {
                                #                       hr(style="border-color: black"),
                                #                       h5("Optional: reshape data from long to wide", style="font-weight:bold"),
                                #                       hr(style="border-color: black"),
-                               h5("You can also upload existing data for calibration and got to 5)", style="font-weight:bold"),
+                               h5("You can also upload existing data for calibration and go to 5)", style="font-weight:bold"),
                                fileInput("prepFile", "Select CSV file",
                                          multiple = FALSE,
                                          accept = c("text/csv",
                                                     "text/comma-separated-values,text/plain",
                                                     ".csv")),
                                hr(style="border-color: black"),
-                               h5("Download calibration data", style="font-weight:bold"),
-                               # actionButton("refreshData3", label = "3) Refresh Data"), br(), br(),
-                               downloadButton("downloadData3", "4) Download Data"),
-                               hr(style="border-color: black"),
-                               h5("5) Calibration by linear model", style="font-weight:bold"),
                                radioButtons("radioPrepro",
                                             label = ("Further preprocessing steps:"),
                                             choices = list("None" = 1,
@@ -285,16 +281,29 @@ analysis_ui <- function(request) {
                                                              "Median" = 2),
                                               selected = 1),
                                  actionButton("combReps", label = "Average Technical Replicates"),
-                                 hr(style="border-color: black")
                                ),
                                conditionalPanel(
                                  hr(style="border-color: black"),
                                  condition = "input.radioPrepro == 3",
                                  textInput("reshapeCol", label = "Column:", value = "Color"),
                                  actionButton("reshapeWide", label = "Reshape"),
-                                 hr(style="border-color: black")
                                ),
-                               textAreaInput("formula", label = "Specify Full Model (R formula)"),
+                               hr(style="border-color: black"),
+                               h5("Download calibration data", style="font-weight:bold"),
+                               # actionButton("refreshData3", label = "3) Refresh Data"), br(), br(),
+                               downloadButton("downloadData3", "4) Download Data"),
+                               hr(style="border-color: black"),
+                               h5("5) Calibration", style="font-weight:bold"),
+                               textInput("analysisName", label = "Analysis name:", value = "Untitled"),
+                               radioButtons("chosenModel",
+                                            label = ("Choose model:"),
+                                            choices = list("Linear model" = 1,
+                                                           "Local polynomial model" = 2,
+                                                           "Generalized additive model" = 3),
+                                            selected = 1),
+                               selectInput("concVar", "Select column with concentration", choices = ""),
+                               checkboxInput("useLog", "Logarithmize concentartion", value=FALSE),
+                               textAreaInput("respVar", label = "Specify the response variable (R expression)"),
                                textAreaInput("subset", label = "Optional: specify subset (logical R expression)"),
                                actionButton("runCali", label = "5) Run Calibration Analysis"),
                                hr(style="border-color: black"),

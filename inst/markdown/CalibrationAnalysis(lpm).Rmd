@@ -13,12 +13,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 # Import of Data
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(paste0(PATH.OUT, "/CalibrationData.RData"))
+load(paste0(PATH.OUT, "/", FILENAME, "Data.RData"))
 tmp <- strsplit(FORMULA, "~")[[1]]
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
@@ -39,50 +38,45 @@ calData
 
 We will apply the following model.
 ```{r}
-as.formula(FORMULA)
+FORMULA
 ```
 
 
 # Analysis
 
-We now run a linear regression analysis including stepwise model selection by
-the Akaike information criterion (AIC). 
-
-## Full Model
-
-In the fist step, we compute the full model.
+We now fit local polynomial model.
 ```{r}
-library(MASS)
-full.fit <- lm(as.formula(FORMULA), data = calData)
-summary(full.fit)
+fit <- loess(as.formula(FORMULA), data = calData)
+summary(fit)
 ```
 
-## Selected Model
-
-We perform a stepwise model selection starting with the full model.
+We compute needed parameters for the analysis.
 ```{r}
-AIC.fit <- stepAIC(full.fit, trace = 0)
-AIC.fit
-AIC.fit.sum <- summary(AIC.fit)
-AIC.fit.sum
+N <- 100 # number of points for interpolation
+ab <- coef(fit)
+conc <- seq(from = 0, to = max(calData[,concVar]), len = N)
+newDF <- data.frame(conc = conc)
+names(newDF) <- concVar
+resp <- predict(fit, newdata = newDF)
+names(resp) <- NULL
+predFunc <- function(newdata){}
+body(predFunc) <- substitute({ Y <- with(newdata, eval(y))
+                         fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
+                         fun(Y) }, list(y = parse(text = respVar),
+                                        resp = resp,
+                                        conc = conc))
+  
+y0 <- predict(fit, newdata = newDF[1,,drop = FALSE], se = TRUE)
+fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
 ```
 
 We plot the given concentrations against the fitted values.
-```{r, warning=FALSE}
+```{r}
 library(ggplot2)
-R2 <- round(AIC.fit.sum$r.squared, 3)
-adj.R2 <- round(AIC.fit.sum$adj.r.squared, 3)
-DF <- data.frame(Observed = AIC.fit$model[,1], 
-                 Fitted = fitted(AIC.fit))
-ggplot(DF, aes(x = Observed, y = Fitted)) +
-  geom_point() + geom_abline(slope = 1, intercept = 0) +
-  xlab("Observed values") + ylab("Fitted values") + 
-  annotate("text",  x=min(DF$Observed), y = max(DF$Fitted), 
-           label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2), 
-                              list(R2 = R2, adj.R2 = adj.R2)), 
-           vjust=1, hjust=0, size = 5)
+modelPlot <- ggplot(calData, aes_string(x = concVar, y = respVar)) +
+                geom_point() + geom_smooth(method = "loess")
+modelPlot
 ```
-
 
 # Computation of LOB, LOD and LOQ
 
@@ -92,28 +86,27 @@ upper bound of the one-sided 95\% confidence interval of the intercept. Based
 on the LOB and the standard error of the residuals, we compute LOD and 
 finally LOQ based on LOD.
 ```{r}
-LOB <- confint(AIC.fit, level = 0.90)[1,2]
+LOB <- fun(qt(0.95, df = y0$df)*y0$se.fit)
 names(LOB) <- "LOB"
 LOB
-LOD <- LOB + 1.645*summary(AIC.fit)$sigma
+LOD <- fun(qt(0.9995, df = y0$df)*y0$se.fit)
 names(LOD) <- "LOD"
 LOD
-LOQ <- 3.3*LOD
-names(LOQ) <- "LOQ"
+LOQ <- 3*LOD
+names(LOB) <- "LOQ"
 LOQ
 ```
-
 
 # Save Results
 
 We save the results.
 ```{r}
-save(AIC.fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/CalibrationResults.RData"))
+save(fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/", FILENAME, "Results.RData"))
 ```
 
 # Save Model
 ```{r}
-saveRDS(AIC.fit, file = "CalibrationModel.rds")
+saveRDS(object = predFunc, file = paste0(PATH.OUT, "/", FILENAME, "Model.rds"))
 ```
 
 # Software

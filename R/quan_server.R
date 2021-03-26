@@ -26,7 +26,7 @@ quan_server <- function( input, output, session ) {
     }
     if(input$upload == 2){
       # using sample image
-      img <- readImage(system.file("images", "sample.TIF", package="LFApp"))
+      img <- readImage(system.file("images", "sample.TIF", package="MultiFlowExt"))
       shinyImageFile$shiny_img_origin <- img
       shinyImageFile$shiny_img_cropped <- img
       shinyImageFile$shiny_img_final <- img
@@ -396,7 +396,7 @@ quan_server <- function( input, output, session ) {
             if(input$invert) {
               img <- 1 - img
             }
-            Background.Threshold[count1] <- LFApp::triangle(img, input$tri_offset)
+            Background.Threshold[count1] <- MultiFlowExt::triangle(img, input$tri_offset)
             signal <- EBImage::imageData(img) > Background.Threshold[count1]
             EBImage::imageData(img) <- signal
             plot(img)
@@ -421,7 +421,7 @@ quan_server <- function( input, output, session ) {
             if(input$invert) {
               img <- 1 - img
             }
-            thr <- LFApp::triangle(img, input$tri_offset)
+            thr <- MultiFlowExt::triangle(img, input$tri_offset)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])
@@ -449,7 +449,7 @@ quan_server <- function( input, output, session ) {
               img <- 1 - img
             }
             
-            Background.Threshold[count1] <- LFApp::threshold_li(img)
+            Background.Threshold[count1] <- MultiFlowExt::threshold_li(img)
             signal <- EBImage::imageData(img) > Background.Threshold[count1]
             EBImage::imageData(img) <- signal
             plot(img)
@@ -474,7 +474,7 @@ quan_server <- function( input, output, session ) {
             if(input$invert) {
               img <- 1 - img
             }
-            thr <- LFApp::threshold_li(img)
+            thr <- MultiFlowExt::threshold_li(img)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])
@@ -631,15 +631,15 @@ quan_server <- function( input, output, session ) {
   predictData <- NULL
   
   observeEvent(input$model, {
-    calModel <<- readRDS(input$model$datapath)
+    calFun <<- readRDS(input$model$datapath)
   })
   
   observe({predictConc()})
   
   predictConc <- eventReactive(input$predict, {
     isolate(
-      if(!is.null(calModel)) {
-        calConc <- predict(calModel, newdata=IntensData)
+      if(!is.null(IntensData)) {
+        calConc <- calFun(IntensData)
         predictData <<- cbind(IntensData, calConc)
         output$quant <- renderDT({
           DF <- predictData

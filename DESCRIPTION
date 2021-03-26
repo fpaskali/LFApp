@@ -1,6 +1,6 @@
 Package: LFApp
 Title: LFApp
-Version: 0.0.11
+Version: 0.0.2
 Authors@R: person('AUTHOR_FIRST', 'AUTHOR_LAST', email = 'AUTHOR@MAIL.COM', role = c('cre', 'aut'))
 Description: PKG_DESC.
 License: MIT + file LICENSE

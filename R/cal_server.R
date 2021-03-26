@@ -25,7 +25,7 @@ cal_server <- function( input, output, session ) {
     }
     if(input$upload == 2){
       # using sample image
-      img <- readImage(system.file("images", "sample.TIF", package="LFApp"))
+      img <- readImage(system.file("images", "sample.TIF", package="MultiFlowExt"))
       shinyImageFile$shiny_img_origin <- img
       shinyImageFile$shiny_img_cropped <- img
       shinyImageFile$shiny_img_final <- img
@@ -397,7 +397,7 @@ cal_server <- function( input, output, session ) {
             if(input$invert) {
               img <- 1 - img
             }
-            Background.Threshold[count1] <- LFApp::triangle(img, input$tri_offset)
+            Background.Threshold[count1] <- MultiFlowExt::triangle(img, input$tri_offset)
             signal <- EBImage::imageData(img) > Background.Threshold[count1]
             EBImage::imageData(img) <- signal
             plot(img)
@@ -422,7 +422,7 @@ cal_server <- function( input, output, session ) {
             if(input$invert) {
               img <- 1 - img
             }
-            thr <- LFApp::triangle(img, input$tri_offset)
+            thr <- MultiFlowExt::triangle(img, input$tri_offset)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])
@@ -450,7 +450,7 @@ cal_server <- function( input, output, session ) {
               img <- 1 - img
             }
             
-            Background.Threshold[count1] <- LFApp::threshold_li(img)
+            Background.Threshold[count1] <- MultiFlowExt::threshold_li(img)
             signal <- EBImage::imageData(img) > Background.Threshold[count1]
             EBImage::imageData(img) <- signal
             plot(img)
@@ -475,7 +475,7 @@ cal_server <- function( input, output, session ) {
             if(input$invert) {
               img <- 1 - img
             }
-            thr <- LFApp::threshold_li(img)
+            thr <- MultiFlowExt::threshold_li(img)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])
@@ -686,6 +686,7 @@ cal_server <- function( input, output, session ) {
       output$calibration <- renderDT({
         datatable(DF)
       })
+      updateSelectInput(session = session, "concVar", choices = names(DF))
     })
   })
   
@@ -791,45 +792,77 @@ cal_server <- function( input, output, session ) {
   
   recursiveRunCali <- eventReactive(input$runCali,{
     isolate({
+      # flush the output and plots
+      output$LOB <- renderText({})
+      output$LOD <- renderText({})
+      output$LOQ <- renderText({})
+      output$plot5 <- renderPlot({})
+      
+      
       PATH.OUT <- input$folder
       if (!file.exists(PATH.OUT)) dir.create(PATH.OUT)
       
-      FORMULA <- input$formula
+      concVar <- input$concVar
+      respVar <- paste0("(",input$respVar,")")
       
-      if(inherits(try(as.formula(FORMULA), silent = TRUE), "try-error")){
-        output$modelSummary <- renderPrint({ as.formula(FORMULA) })
+      if(input$useLog){
+        if(input$chosenModel == 3){
+          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
+        }else{
+          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
+        }
+      }else{
+        if(input$chosenModel == 3){
+          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
+        }else{
+          FORMULA <- paste0(respVar, " ~ ", concVar)
+        }
+      }
+      
+      if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
+        MODEL <- paste0("lm(",FORMULA,", data=calData)")
+      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
+        MODEL <- paste0("loess(",FORMULA,", data=calData)")
+      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
+        MODEL <- paste0("gam(",FORMULA,"calData)")
+      } else {
+        output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
+          print(paste0("Formula: ",FORMULA))})
+        showNotification("Error in the formula!", duration = 5, type="error")
         updateTabsetPanel(session, "tabs", selected = "tab6")
         return(NULL)
       }
       
+      info <- showNotification(paste("Fitting the model..."), duration = 0, type="message")
+      
       SUBSET <- input$subset
+      
+      FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
+      
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-           file = paste0(PATH.OUT,"/CalibrationData.RData"))
+           file = paste0(PATH.OUT,"/", FILENAME, "Data.RData"))
+      if (input$chosenModel == 1) {
+        file.copy(from = "CalibrationAnalysis(lm).Rmd",
+                  to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
+      } else if (input$chosenModel == 2) {
+        file.copy(from = "CalibrationAnalysis(lpm).Rmd",
+                  to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
+      } else if (input$chosenModel == 3) {
+        file.copy(from = "CalibrationAnalysis(gam).Rmd",
+                  to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
+      }
       
-      file.copy(from = system.file("markdown", "CalibrationAnalysis.Rmd",
-                                   package = "LFApp"),
-                to = paste0(PATH.OUT, "/CalibrationAnalysis.Rmd"))
-      rmarkdown::render(input = paste0(PATH.OUT, "/CalibrationAnalysis.Rmd"),
-                        output_file = paste0(PATH.OUT, "/CalibrationAnalysis.html"))
+      rmarkdown::render(input = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"),
+                        output_file = paste0(PATH.OUT, "/", FILENAME, "Analysis.html"))
       
-      load(file = paste0(PATH.OUT, "/CalibrationResults.RData"))
+      # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
       
-      AIC.fit.sum <- summary(AIC.fit)
-      R2 <- round(AIC.fit.sum$r.squared, 3)
-      adj.R2 <- round(AIC.fit.sum$adj.r.squared, 3)
-      DF <- data.frame(Observed = AIC.fit$model[,1],
-                       Fitted = fitted(AIC.fit))
-      output$modelSummary <- renderPrint({ AIC.fit })
+      output$modelSummary <- renderPrint({ fit })
       
       output$plot5 <- renderPlot({
-        ggplot(DF, aes(x = Observed, y = Fitted)) +
-          geom_point() + geom_abline(slope = 1, intercept = 0) +
-          xlab("Observed value") + ylab("Fitted values") +
-          annotate("text",  x=min(DF$Observed), y = max(DF$Fitted),
-                   label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2),
-                                      list(R2 = R2, adj.R2 = adj.R2)),
-                   vjust=1, hjust=0, size = 5)
-        
+        modelPlot
       })
       output$LOB <- renderText({
         paste0("Limit of Blank (LOB): ", signif(LOB, 3))
@@ -841,6 +874,16 @@ cal_server <- function( input, output, session ) {
         paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
       })
       
+      # Adding the analysis name and model formula to the table
+      analysisName <- rep(input$analysisName, nrow(CalibrationData))
+      modelFormula <- rep(MODEL, nrow(CalibrationData))
+      CalibrationData <- cbind(CalibrationData, analysisName, modelFormula)
+      output$calibration <- renderDT({
+        datatable(CalibrationData)
+      })
+      
+      removeNotification(info)
+      
       updateTabsetPanel(session, "tabs", selected = "tab6")
     })
   })
@@ -849,8 +892,8 @@ cal_server <- function( input, output, session ) {
   
   resetFolder <- eventReactive(input$folder,{
     isolate({
-      if(substring(input$folder,1,nchar(file.path(fs::path_home(), "Documents/"))) != file.path(fs::path_home(), "Documents/"))
-        updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home(), "Documents/")) 
+      if(substring(input$folder,1,nchar(file.path(fs::path_home()))) != file.path(fs::path_home()))
+        updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home())) 
     })
   })
   
@@ -858,7 +901,7 @@ cal_server <- function( input, output, session ) {
   
   recursiveOpenReport <- eventReactive(input$openReport,{
     isolate({
-      browseURL(file.path(input$folder, "/CalibrationAnalysis.html"),
+      browseURL(paste0(input$folder, "/", FILENAME, "Analysis.html"),
                 browser = getOption("browser"))
     })
   })
@@ -903,6 +946,9 @@ cal_server <- function( input, output, session ) {
       write.csv(CalibrationData, file, row.names = FALSE)
     }
   )
+  shinyDirChoose(input, 'folder',
+                 roots=c(wd=fs::path_home()),
+                 filetypes=c(''))
   
   
   #When user clicks the return to command line button

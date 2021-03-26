@@ -844,13 +844,16 @@ analysis_server <- function( input, output, session ) {
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
            file = paste0(PATH.OUT,"/", FILENAME, "Data.RData"))
       if (input$chosenModel == 1) {
-        file.copy(from = "CalibrationAnalysis(lm).Rmd",
+        file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
+                                     package = "LFApp"),
                   to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
       } else if (input$chosenModel == 2) {
-        file.copy(from = "CalibrationAnalysis(lpm).Rmd",
+        file.copy(from = system.file("markdown", "CalibrationAnalysis(lpm).Rmd",
+                                     package = "LFApp"),
                   to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
       } else if (input$chosenModel == 3) {
-        file.copy(from = "CalibrationAnalysis(gam).Rmd",
+        file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
+                                     package = "LFApp"),
                   to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
       }
       

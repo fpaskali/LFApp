@@ -949,9 +949,6 @@ cal_server <- function( input, output, session ) {
       write.csv(CalibrationData, file, row.names = FALSE)
     }
   )
-  shinyDirChoose(input, 'folder',
-                 roots=c(wd=fs::path_home()),
-                 filetypes=c(''))
   
   
   #When user clicks the return to command line button

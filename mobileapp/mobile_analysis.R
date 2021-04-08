@@ -1219,7 +1219,7 @@ server <- function(input, output, session){
         return(NULL)
       }
       
-      f7Toast(text=paste("Fitting the model..."), position="top")
+      f7Toast(text=paste("Fitting the model..."), position="top", session=session)
       
       SUBSET <- input$subset
       

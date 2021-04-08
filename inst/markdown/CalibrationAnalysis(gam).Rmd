@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(paste0(PATH.OUT, "/", FILENAME, "Data.RData"))
+load(paste0(PATH.OUT, "/", FILENAME, "_Data.RData"))
 tmp <- strsplit(FORMULA, "~")[[1]]
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
@@ -42,13 +42,14 @@ FORMULA
 
 # Analysis
 
-We now fit generalized additive model.
+We now fit a generalized additive model.
 ```{r}
-fit <- gam(as.formula(FORMULA), data = calData)
+fit <- gam(as.formula(FORMULA), data = calData, method = "REML")
 summary(fit)
 ```
 
-We compute needed parameters for the analysis.
+We compute the predicted concentration values and determine the inverse of the 
+fitted model by spline interpolation.
 ```{r}
 N <- 100
 ab <- coef(fit)
@@ -60,11 +61,10 @@ resp <- predict(fit, newdata = newDF)
 names(resp) <- NULL
 predFunc <- function(newdata){}
 body(predFunc) <- substitute({ Y <- with(newdata, eval(y))
-fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
-fun(Y) }, list(y = parse(text = respVar),
-               resp = resp,
-               conc = conc))
-
+                      fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
+                      fun(Y) }, list(y = parse(text = respVar),
+                                     resp = resp,
+                                     conc = conc))
 y0 <- predict(fit, newdata = newDF[1,,drop = FALSE], se = TRUE)
 fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
 ```
@@ -80,10 +80,10 @@ modelPlot
 # Computation of LOB, LOD and LOQ
 
 We compute limit of blank (LOB), limit of detection (LOD) and limit of 
-quantification (LOQ) using the linear regression fit. We get the LOB as the
-upper bound of the one-sided 95\% confidence interval of the intercept. Based
-on the LOB and the standard error of the residuals, we compute LOD and 
-finally LOQ based on LOD.
+quantification (LOQ) by inverting the regression fit. We get the LOB by inverting 
+the upper bound of the one-sided 95\% confidence interval at concentration $0$. 
+In caso of the LOD, the upper-bound of the 99.95\% confidence interval at 
+concentration $0$ is inverted. LQQ we define as $3\times\textrm{LOD}$.
 ```{r}
 LOB <- fun(1.645*y0$se.fit)
 names(LOB) <- "LOB"
@@ -100,12 +100,15 @@ LOQ
 
 We save the results.
 ```{r}
-save(fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/", FILENAME, "Results.RData"))
+save(fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/", FILENAME, "_Results.RData"))
 ```
 
 # Save Model
+
+We save the inverse of the fitted model to be able to apply it for predicting
+concentrations.
 ```{r}
-saveRDS(object = predFunc, file = paste0(PATH.OUT, "/", FILENAME, "Model.rds"))
+saveRDS(object = predFunc, file = paste0(PATH.OUT, "/", FILENAME, "_Model.rds"))
 ```
 
 # Software

@@ -25,7 +25,7 @@ analysis_server <- function( input, output, session ) {
     }
     if(input$upload == 2){
       # using sample image
-      img <- readImage(system.file("images", "sample.TIF", package="MultiFlowExt"))
+      img <- readImage(system.file("images", "sample.TIF", package="LFApp"))
       shinyImageFile$shiny_img_origin <- img
       shinyImageFile$shiny_img_cropped <- img
       shinyImageFile$shiny_img_final <- img
@@ -158,8 +158,6 @@ analysis_server <- function( input, output, session ) {
   
   resetImage <- eventReactive(input$reset,{
     isolate({
-      # For now, resetting only the grid is enough. If there is a need of resseting the image
-      # and rotation settings, uncommennt following three lines.
       shinyImageFile$shiny_img_cropped <- shinyImageFile$shiny_img_origin
       shinyImageFile$shiny_img_final <- shinyImageFile$shiny_img_cropped
       output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
@@ -264,7 +262,6 @@ analysis_server <- function( input, output, session ) {
   
   observe({recursiveThreshold()})
   
-  # TODO Implement invert color button
   recursiveThreshold <- eventReactive(input$threshold,{
     isolate({
       seg.list <- shinyImageFile$segmentation_list
@@ -788,6 +785,8 @@ analysis_server <- function( input, output, session ) {
     })
   })
   
+  MODELNUM <- 1
+  
   observe({recursiveRunCali()})
   
   recursiveRunCali <- eventReactive(input$runCali,{
@@ -822,11 +821,8 @@ analysis_server <- function( input, output, session ) {
       }
       
       if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-        MODEL <- paste0("lm(",FORMULA,", data=calData)")
-      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-        MODEL <- paste0("loess(",FORMULA,", data=calData)")
-      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-        MODEL <- paste0("gam(",FORMULA,"calData)")
+      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
+      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
       } else {
         output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
           print(paste0("Formula: ",FORMULA))})
@@ -842,23 +838,23 @@ analysis_server <- function( input, output, session ) {
       FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
       
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-           file = paste0(PATH.OUT,"/", FILENAME, "Data.RData"))
+           file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
       if (input$chosenModel == 1) {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
+                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
       } else if (input$chosenModel == 2) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(lpm).Rmd",
+        file.copy(from = system.file("markdown", "CalibrationAnalysis(loess).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
+                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
       } else if (input$chosenModel == 3) {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"))
+                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
       }
       
-      rmarkdown::render(input = paste0(PATH.OUT, "/", FILENAME, "Analysis.Rmd"),
-                        output_file = paste0(PATH.OUT, "/", FILENAME, "Analysis.html"))
+      rmarkdown::render(input = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"),
+                        output_file = paste0(PATH.OUT, "/", FILENAME, "_Analysis.html"))
       
       # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
       
@@ -879,11 +875,15 @@ analysis_server <- function( input, output, session ) {
       
       # Adding the analysis name and model formula to the table
       analysisName <- rep(input$analysisName, nrow(CalibrationData))
-      modelFormula <- rep(MODEL, nrow(CalibrationData))
+      modelFormula <- rep(FORMULA, nrow(CalibrationData))
       CalibrationData <- cbind(CalibrationData, analysisName, modelFormula)
       output$calibration <- renderDT({
         datatable(CalibrationData)
       })
+      
+      MODELNUM <<- MODELNUM + 1
+      
+      updateTextInput(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
       
       removeNotification(info)
       
@@ -904,7 +904,7 @@ analysis_server <- function( input, output, session ) {
   
   recursiveOpenReport <- eventReactive(input$openReport,{
     isolate({
-      browseURL(paste0(input$folder, "/", FILENAME, "Analysis.html"),
+      browseURL(paste0(input$folder, "/", FILENAME, "_Analysis.html"),
                 browser = getOption("browser"))
     })
   })

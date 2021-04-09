@@ -84,8 +84,8 @@ modelPlot
 We compute limit of blank (LOB), limit of detection (LOD) and limit of 
 quantification (LOQ) by inverting the regression fit. We get the LOB by inverting 
 the upper bound of the one-sided 95\% confidence interval at concentration $0$. 
-In caso of the LOD, the upper-bound of the 99.95\% confidence interval at 
-concentration $0$ is inverted. LQQ we define as $3\times\textrm{LOD}$.
+In case of LOD, the upper-bound of the 99.95\% confidence interval at 
+concentration $0$ is inverted. LOQ is determined as $3\times\textrm{LOD}$.
 ```{r}
 LOB <- fun(qt(0.95, df = y0$df)*y0$se.fit)
 names(LOB) <- "LOB"

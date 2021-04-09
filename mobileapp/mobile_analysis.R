@@ -1214,12 +1214,12 @@ server <- function(input, output, session){
       } else {
         output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
           print(paste0("Formula: ",FORMULA))})
-        f7Toast(text="Error in the formula!", position="top")
+        f7Toast(text="Error in the formula!", position="top", session=session)
         updateF7Tabs(session=session, id="tabs", selected = "Results")
         return(NULL)
       }
       
-      f7Toast(text=paste("Fitting the model..."), position="top")
+      f7Toast(text=paste("Fitting the model..."), position="top", session=session)
       
       SUBSET <- input$subset
       

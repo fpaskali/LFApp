@@ -42,7 +42,7 @@ The minimum number of lines per strip is two, the maximum number of lines per st
 After loading the image and selecting the number of strips as well as lines per strip, one needs to click on the image and drag to generate a rectangular selection region on the image. It is best, if each line is roughly in the middle of a respective segment. In addition, there is a segment between two consecutive bands. This segment should not include any part of a line since it can be used for background correction; see below. An example of a
 well selected cropping region is shown in the following screenshot. 
 
-<p>![](01MultiFlowShinyApp.png){width=100%}</p>
+<p>![](LFApp.png){width=100%}</p>
 
 By clicking "APPLY SEGMENTATION" the original image is cropped to size of the selected region and segmented. The segments between the bands are used in our quantile background correction method; see below.
 An example can be seen in the screenshot below. If you want to change the cropped region you can select "RESET". 
@@ -85,7 +85,7 @@ However, in cases where the lines are not unclear and very blurred our quantile 
 By clicking "APPLY TRESHOLD" the selected threshold method is applied to the segmented images of the selected strip. The upper plots show the pixels that have intensities above the background.
 The lower plots show the images after background subtraction; see the screenshot below.
 
-<p>![](03BackgroundCorrection.png){width=100%}</p>
+<p>![](BackgroundCorrection.png){width=100%}</p>
 
 The calculated mean and median intensities on the lines in order from top of the strip to the bottom of the strip are shown as well.
 
@@ -119,7 +119,7 @@ We also provide a "DELETE DATA" button for restarting with new images or uploadi
 
 Instead of generating new data, one can also upload already existing intensity data, that can also be generated with a different software. This step can also be seen as a second entry point of the app. The screenshot below shows an example of data that was generated with the app saved and then loaded again.
 
-<p>![](04IntensityData.png){width=100%}</p>
+<p>![](IntensityData.png){width=100%}</p>
 
 
 ## 3) Switch To Experiment Info
@@ -134,7 +134,7 @@ Clicking "SWITCH TO EXPERIMENT INFO" changes the Tab to Tab 4, where information
 One first can either upload information about the experiment in form of a .csv file or upload already merged data (intensity data merged with experiment
 information). An example of a table with information about the experiment is shown in the screenshot below.
 
-<p>![](05ExperimentData.png){width=100%}</p>
+<p>![](ExperimentData.png){width=100%}</p>
 
 This is a third optional starting point of the app. Here, one can also directly start with already merged data and proceed with the calibration analysis.
 
@@ -144,7 +144,7 @@ This is a third optional starting point of the app. Here, one can also directly 
 For merging the intensity data with the information about the experiment, one has to specify the names of the columns on which the merge should take place. 
 The default is "File", as a "File" column is generated when the intensity data is computed with the app. By clicking "2) MERGE WITH INTENSITY DATA" the two datasets will be merged. An example of a table with merged data is shown in the screenshot below.
 
-<p>![](06MergedData.png){width=100%}</p>
+<p>![](ExperimentMergedData.png){width=100%}</p>
 
 
 ## Download data
@@ -172,19 +172,19 @@ In the first step, a folder for the analysis results can be selected. If no fold
 
 Instead of generating the preprocessed data with our app, one can also upload preprocessed data and perform the calibration analysis on them. An example of uploaded preprocessed data that were generated with our app and saved as a .csv file is shown in the following screenshot.
 
-<p>![](07PreprocessedData.png){width=100%}</p>
 
 ## Optional: average technical replicates
 
 If the merged data includes technical replicates, these replicates can be averaged either by the arithmetic mean or the median. For this purpose the name of the column, which enables the identification of the replicates is 
 required. By default we assume that this column is called "Sample". In case there is more than one analyte/color per line, one should set "Number of analytes/colors per line" to the respective number. If this number is larger than 1, an additional field will be shown, where one should enter the name of the column including the analyte/color information.
 
+<p>![](Opt1Calibration.png){width=100%}</p>
 
 ## Optional: reshape data from long to wide
 
 If there is more than one analyte/color per line, one might want to combine both information into one calibration model. For such cases it is useful to reshape the data from long (analyte/color data in the rows) to wide (analyte/color data in the columns).
 
-
+<p>![](Opt2Calibration.png){width=100%}</p>
 
 ## 4) Download preprocessed data
 
@@ -197,7 +197,7 @@ In the final step of this Tab, one has to specify the calibration model.
 The model can the chosen via a checkbox (linear, local polynomial LOES, generalized additive model GAM). A column for concentration values can be selected. The concentration values can be logarithmized. You can specify a response variable or specify a subset with valid R expressions.
 An example is visible in the following screenshot.
 
-<p>![](08PreparationCalibrationModel.png){width=100%}</p>
+<p>![](Calibration.png){width=100%}</p>
 
 Sometimes one only wants to analyse a subset of the data. In such cases the
 subset can be provided in terms of a logical R expression in the field below
@@ -219,7 +219,7 @@ these files for an extended analysis.
 This Tab shows a brief overview of the analysis results as 
 shown in the following screenshot.
 
-<p>![](09ResultsCalibrationAnalysis.png){width=100%}</p>
+<p>![](Results.png){width=100%}</p>
 
 
 ## Open analysis report
@@ -228,7 +228,7 @@ By clicking "Open" the full report of the calibration analysis will be opened
 in the standard browser. The first part of the report is visible in the following
 screenshot.
 
-<p>![](10AnalysisReport.png){width=100%}</p>
+<p>![](AnalysisReport.png){width=100%}</p>
 
 
 # Tab 7: Quantification
@@ -237,6 +237,7 @@ The final tab of our application enables the quantification of intensity values 
 You can upload an existing model from previous calibration analysis and use it to predict the concentrations for the intensity values acquired beforehand by clicking "PREDICT"
 Via the "DOWNLOAD DATA" button the data table can be saved as a .csv file containing the intensity values as well as the predicted concentrations.
 
+<p>![](Quantification.png){width=100%}</p>
 
 # Required R packages
 

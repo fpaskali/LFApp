@@ -47,7 +47,7 @@ well selected cropping region is shown in the following screenshot.
 By clicking "APPLY SEGMENTATION" the original image is cropped to size of the selected region and segmented. The segments between the bands are used in our quantile background correction method; see below.
 An example can be seen in the screenshot below. If you want to change the cropped region you can select "RESET". 
 
-The cropping was adapted from the shiny app provided by package ShinyImage [@Shinyimage].
+The cropping was adapted from the shiny app provided by package ShinyImage [@shinyImage].
 
 
 # Tab 2: Background
@@ -75,9 +75,9 @@ channel wise analysis of color images.
 
 ## 2) Select threshold method and apply
 
-There are four threshold methods, where the default is Otsu's method [@Otsu1979].
-Otsu's method returns a single intensity threshold that separates pixels into foreground and background. It is equivalent to k-means clustering of the intensity histogram [@Liu2009]. Otsu and Li [@Li1993, @Li1998] are non-parametric, fully automatic algorithms that find the optimal threshold for the image. 
-Additionally, two semi-automatic algorithms, namely Quantile and Triangle [@Zack1977] were included, to cover different images and cases where automatic threshold results are not ideal. 
+There are four threshold methods, where the default is Otsu's method [@Otsu.1979].
+Otsu's method returns a single intensity threshold that separates pixels into foreground and background. It is equivalent to k-means clustering of the intensity histogram [@Liu.2009]. Otsu and Li [@Li.1993, @Li.1998] are non-parametric, fully automatic algorithms that find the optimal threshold for the image. 
+Additionally, two semi-automatic algorithms, namely Quantile and Triangle [@Zack.1977] were included, to cover different images and cases where automatic threshold results are not ideal. 
 The quantile method is a simple method that computes the specified quantile of all pixel intensities of the segments between the lines (per strip). In most of the images we have analysed so far, Otsu's method performed very well and better than our quantile method. 
 However, in cases where the lines are not unclear and very blurred our quantile method may outperform Otsu's method.
 
@@ -243,17 +243,17 @@ Via the "DOWNLOAD DATA" button the data table can be saved as a .csv file contai
 
 Our app requires the following R packages to work properly:
 
-* stats: The R Stats Package [@Rcore]
+* stats: The R Stats Package [@R2020]
 * mgcv: Mixed GAM Computation Vehicle with Automatic Smoothness Estimation
-* shiny: Web Application Framework for R [@shiny]
-* shinyjs: Easily Improve the User Experience of Your Shiny Apps in Seconds [@shinyjs]
-* shinythemes: Themes for Shiny [@shinythemes]
-* fs: Cross-Platform File System Operations Based on 'libuv' [@fs]
-* shinyFiles: A Server-Side File System Viewer for Shiny [@shinyFiles]
-* Bioconductor package EBImage: R package for image processing with applications to cellular phenotypes [@EBImage]
-* DT: A Wrapper of the JavaScript Library 'DataTables' [@DT]
+* shiny: Web Application Framework for R [@Shiny2020]
+* shinyjs: Easily Improve the User Experience of Your Shiny Apps in Seconds [@shinyjs.2020]
+* shinythemes: Themes for Shiny [@shinythemes.2018]
+* fs: Cross-Platform File System Operations Based on 'libuv' [@fs.2020]
+* shinyFiles: A Server-Side File System Viewer for Shiny [@shinyfiles.2020]
+* Bioconductor package EBImage: R package for image processing with applications to cellular phenotypes [@Pau.2010]
+* DT: A Wrapper of the JavaScript Library 'DataTables' [@DT.2020]
 * rmarkdown: Dynamic Documents for R [@rmarkdown]
-* ggplot2: Elegant Graphics for Data Analysis [@ggplot2]
+* ggplot2: Elegant Graphics for Data Analysis [@Wickham.2016]
 
 
 # References

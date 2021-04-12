@@ -20,7 +20,7 @@ be installed automatically.
 ## Install package remotes
 if(!require(remotes)) install.packages("remotes")
 ## Install package LFApp
-remotes::install_github("fpaskali/LFApp")
+remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```
 
 ## Start App

@@ -244,7 +244,7 @@ Via the "DOWNLOAD DATA" button the data table can be saved as a .csv file contai
 Our app requires the following R packages to work properly:
 
 * stats: The R Stats Package [@R2020]
-* mgcv: Mixed GAM Computation Vehicle with Automatic Smoothness Estimation
+* mgcv: Mixed GAM Computation Vehicle with Automatic Smoothness Estimation [@mgcv]
 * shiny: Web Application Framework for R [@Shiny2020]
 * shinyjs: Easily Improve the User Experience of Your Shiny Apps in Seconds [@shinyjs.2020]
 * shinythemes: Themes for Shiny [@shinythemes.2018]

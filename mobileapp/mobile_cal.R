@@ -312,25 +312,6 @@ ui <- f7Page(
         ),
         uiOutput("results")
       )
-      # ),
-      #  f7Tab(
-      #    tabName = "Quantification",
-      #    icon = f7Icon("gauge"),
-      #    active = FALSE,
-      #    f7Block(
-      #      strong = TRUE, 
-      #      h3("Load existing model from file"),
-      #      f7File(inputId = 'model',
-      #             label = 'Select model',
-      #             accept = ".rds",
-      #             placeholder = "RDS file"),
-      #      h3("Predict concentration"),
-      #      f7Button("predict", label = "Predict"),
-      #      h3("Download concentration data"),
-      #      f7DownloadButton("downloadData4", "Download data")
-      #    ),
-      #    DTOutput("quant")
-      #  )
     )
   )
 )
@@ -1294,28 +1275,6 @@ server <- function(input, output, session){
       browseURL(paste0(input$folder, "/", FILENAME, "_Analysis.html"),
                 browser = getOption("browser"))
     })
-  })
-  
-  # Quantification module ------------------------------------------------------
-  predictData <- NULL
-  
-  observeEvent(input$model, {
-    calFun <<- readRDS(input$model$datapath)
-  })
-  
-  observe({predictConc()})
-  
-  predictConc <- eventReactive(input$predict, {
-    isolate(
-      if(!is.null(IntensData)) {
-        calConc <- calFun(IntensData)
-        predictData <<- cbind(IntensData, calConc)
-        output$quant <- renderDT({
-          DF <- predictData
-          datatable(DF)
-        })
-      }
-    )
   })
   
   #allows user to download prediction

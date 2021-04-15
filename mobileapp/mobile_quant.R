@@ -78,6 +78,7 @@ ui <- f7Page(
           uiOutput("cropButtons")
         )
       ),
+      
       f7Tab(
         tabName = "Background",
         icon = f7Icon("circle_lefthalf_fill"),
@@ -122,6 +123,7 @@ ui <- f7Page(
         ),
         uiOutput("threshPlots"),
       ),
+      
       f7Tab(
         tabName = "Intensity Data",
         icon = f7Icon("table"),
@@ -148,170 +150,11 @@ ui <- f7Page(
             f7DownloadButton("downloadData", label = "Download Data"),
             f7Button("deleteData", color="red", label="Delete Data")
           ),
-          f7Button(inputId="expInfo", label="Switch to experiment info")
+          f7Button(inputId="quant", label="Switch to Quantification")
           )
         )
       ),
-      # f7Tab(
-      #   tabName = "Experiment Info",
-      #   icon = f7Icon("info_circle"),
-      #   active = FALSE,
-      #   f7Block(
-      #     f7Accordion(
-      #       multiCollapse = TRUE,
-      #       f7AccordionItem(
-      #         title = "Upload experiment info or upload existing merged data",
-      #         f7Accordion(
-      #           f7File(inputId = 'expFile',
-      #                  label = 'Select CSV file',
-      #                  accept = c("text/csv",
-      #                             "text/comma-separated-values,text/plain",
-      #                             ".csv")),
-      #           f7AccordionItem(
-      #             title = "CSV options",
-      #             f7checkBox("header", "Header", TRUE),
-      #             f7Radio("sep", "Separator",
-      #                     choices = c("Comma ( , )",
-      #                                 "Semicolon ( ; )",
-      #                                 "Tab ( \\t )"),
-      #                     selected = "Comma ( , )"),
-      #             f7Radio("quote", "Quote",
-      #                     choices = c("None",
-      #                                 'Double Quote ( " )',
-      #                                 "Single Quote ( ' )"),
-      #                     selected = "None"))
-      #           )
-      #         ),
-      #       f7AccordionItem(
-      #         title = "Merge datasets",
-      #         "Select ID columns and merge datasets",
-      #         f7Text("mergeIntens", label = "ID Column Intensity Data", value = "File"),
-      #         f7Text("mergeExp", label = "ID Column Experiment Info", value = "File"),
-      #         f7Segment(
-      #           f7Button("merge", label = "Merge With Intensity Data")
-      #         )
-      #       ),
-      #     ),
-      #     f7Block(
-      #       strong = TRUE,
-      #       f7Block(
-      #         strong = TRUE,
-      #         style = "overflow-x:scroll",
-      #         DTOutput("experiment")
-      #       ),
-      #       f7Segment(
-      #         f7DownloadButton("downloadData2", label = "Download Data"),
-      #         f7Button("deleteData2", color="red", label="Delete Data")
-      # 
-      #       ),
-      #       f7Block(
-      #         f7Button("prepare", label = "Prepare Calibration")
-      #       )
-      #     )
-      #   )
-      # ),
-      # f7Tab(
-      #   tabName = "Calibration",
-      #   icon = f7Icon("graph_square"),
-      #   active = FALSE,
-      #   f7Block(
-      #     f7Accordion(
-      #       multiCollapse=TRUE,
-      #       f7AccordionItem(
-      #         title = "Upload existing data for calibration",
-      #         f7File(inputId = 'prepFile',
-      #                label = 'Select CSV file',
-      #                accept = c("text/csv",
-      #                           "text/comma-separated-values,text/plain",
-      #                           ".csv"))
-      #       ),
-      #       f7AccordionItem(
-      #         title = "Furter preprocessing steps",
-      #         f7Radio("radioPrepro",
-      #                 label = "",
-      #                 choices = c("None",
-      #                             "Average technical replicates",
-      #                             "Reshape from long to wide"),
-      #                 selected = "None"),
-      #         conditionalPanel(
-      #           condition = "input.radioPrepro == 'Average technical replicates'",
-      #           f7Text("combRepsColSI", label = "Column with sample information:", value = "Sample"),
-      #           f7Stepper(inputId = "colorsBands",
-      #                     label = "Number of analytes/colors per line:",
-      #                     value = 1,
-      #                     min = 1,
-      #                     max = 5,
-      #                     step = 1,
-      #           ),
-      #           conditionalPanel(
-      #             condition = "input.colorsBands > 1",
-      #             f7Text("combRepsColCL", label = "Column with color information:", value = "Color"),
-      #           ),
-      #           f7Radio("radioReps",
-      #                   label = ("Choose measure for averaging:"),
-      #                   choices = list("Mean",
-      #                                  "Median"),
-      #                   selected = "Mean"),
-      #           f7Segment(
-      #             f7Button("combReps", label = "Average Technical Replicates")
-      #           )
-      #         ),
-      #         conditionalPanel(
-      #           condition = "input.radioPrepro == 'Reshape from long to wide'",
-      #           f7Text("reshapeCol", label = "Column:", value = "Color"),
-      #           f7Segment(
-      #             f7Button("reshapeWide", label = "Reshape")
-      #           )
-      #         )
-      #       ),
-      #       f7AccordionItem(
-      #         title = "Calibration",
-      #         open = TRUE,
-      #         f7Text("analysisName","Analysis name:", value="Model1"),
-      #         f7Radio("chosenModel",
-      #                 label = "Choose model",
-      #                 choices = list("Linear model (lm)",
-      #                                "Local polynomial model (loess)",
-      #                                "Generalized additive model (gam)"),
-      #                 selected = "Linear model (lm)"),
-      #         f7TextArea("respVar", label = "Specify response variable (R expresssion)"),
-      #         f7TextArea("subset", label = "Optional: specify subset (logical R expression)"),
-      #         f7Picker("concVar", label = "Specify column with concentration", choices=""),
-      #         # f7Text("concVar", "Specify column with concentration"),
-      #         f7checkBox("useLog", "Logarithmize concentration", value=FALSE),
-      #         f7Block(
-      #           strong = TRUE,
-      #           f7Block(
-      #             strong = TRUE,
-      #             style = "overflow-x:scroll",
-      #             verbatimTextOutput("folder"),
-      #             DTOutput("calibration")
-      #           ),
-      #           f7Segment(
-      #             f7DownloadButton("downloadData3", label = "Download Data"),
-      #             f7Button("deleteData3", color="red", label="Delete Data")
-      #           )
-      #         ),
-      #         f7Segment(
-      #           f7Text("folder","Working directory:", value=file.path(fs::path_home(), "Documents/LFApp"), 
-      #                  placeholder=file.path(fs::path_home(), "Documents/LFApp")),
-      #           f7Button("runCali", label = "Run Calibration Analysis")
-      #         )
-      #       )
-      #     ),
-      #   )
-      # ),
-      # f7Tab(
-      #   tabName = "Results",
-      #   icon = f7Icon("doc_text_search"),
-      #   active = FALSE,
-      #   f7Block(
-      #     strong = TRUE, 
-      #     h3("Open analysis report"),
-      #     f7Button("openReport", label = "Open")
-      #   ),
-      #   uiOutput("results")
-      # ),
+      
        f7Tab(
          tabName = "Quantification",
          icon = f7Icon("gauge"),
@@ -919,23 +762,6 @@ server <- function(input, output, session){
     })
   })
   
-  observe({recursiveDelete2()})
-  recursiveDelete2 <- eventReactive(input$deleteData2,{
-    isolate({
-      ExpInfo <<- NULL
-      MergedData <<- NULL
-      output$experiment <- renderDT({})
-    })
-  })
-  
-  observe({recursiveDelete3()})
-  recursiveDelete3 <- eventReactive(input$deleteData3,{
-    isolate({
-      MergedData <<- NULL
-      CalibrationData <<- NULL
-      output$calibration <- renderDT({})
-    })
-  })
   
   observe({recursiveRefresh()})
   recursiveRefresh <- eventReactive(input$refreshData,{
@@ -947,45 +773,10 @@ server <- function(input, output, session){
     })
   })
   
-  observe({recursiveRefresh2()})
-  recursiveRefresh2 <- eventReactive(input$refreshData2,{
-    isolate({
-      output$experiment <- renderDT({
-        DF <- MergedData
-        datatable(DF)
-      })
-    })
-  })
-  
-  observe({recursiveRefresh3()})
-  recursiveRefresh3 <- eventReactive(input$refreshData3,{
-    isolate({
-      output$calibration <- renderDT({
-        DF <- CalibrationData
-        datatable(DF)
-      })
-    })
-  })
+
   observeEvent(input$intensFile,{
     output$intens <- renderDT({})
     suppressWarnings(rm(IntensData, pos = 1))
-  })
-  observeEvent(input$expFile,{
-    output$experiment <- renderDT({})
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
-  observeEvent(input$prepFile,{
-    output$calibration <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
-  
-  observe({recursiveExpInfo()})
-  
-  recursiveExpInfo <- eventReactive(input$expInfo,{
-    updateF7Tabs(session=session, id="tabs", selected = "Experiment Info")
   })
   
   observe({recursiveUploadIntens()})
@@ -1004,69 +795,10 @@ server <- function(input, output, session){
     })
   })
   
-  observe({recursiveUploadExpFile()})
-  recursiveUploadExpFile <- eventReactive(input$expFile,{
-    isolate({
-      req(input$expFile)
-      tryCatch(
-        DF <- read.csv(input$expFile$datapath, header = TRUE,
-                       check.names = FALSE),
-        error = function(e){stop(safeError(e))}
-      )
-      ExpInfo <<- DF
-      MergedData <<- DF
-      suppressWarnings(rm(CalibrationData, pos = 1))
-      output$calibration <- renderDT({})
-      
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
-    })
-  })
+  observe({recursiveQuant()})
   
-  observe({recursiveUploadPrepFile()})
-  recursiveUploadPrepFile <- eventReactive(input$prepFile,{
-    isolate({
-      req(input$prepFile)
-      tryCatch(
-        DF <- read.csv(input$prepFile$datapath, header = TRUE,
-                       check.names = FALSE),
-        error = function(e){stop(safeError(e))}
-      )
-      CalibrationData <<- DF
-      output$calibration <- renderDT({
-        datatable(DF)
-      })
-      updateF7Picker("concVar", choices=names(DF))
-    })
-  })
-  
-  observe({recursiveMerge()})
-  recursiveMerge <- eventReactive(input$merge,{
-    isolate({
-      DF <- merge(ExpInfo, IntensData,
-                  by.x = input$mergeExp,
-                  by.y = input$mergeIntens, all = TRUE)
-      
-      MergedData <<- DF
-      CalibrationData <<- DF
-      
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
-    })
-  })
-  
-  observe({recursivePrepare()})
-  recursivePrepare <- eventReactive(input$prepare,{
-    DF <- MergedData
-    CalibrationData <<- DF
-    
-    output$calibration <- renderDT({
-      datatable(DF)
-    })
-    
-    updateF7Tabs(session=session, id="tabs", selected = "Calibration")
+  recursiveQuant <- eventReactive(input$quant,{
+    updateF7Tabs(session=session, id="tabs", selected = "Quantification")
   })
   
   
@@ -1077,223 +809,6 @@ server <- function(input, output, session){
       write.csv(IntensData, file, row.names = FALSE)
     }
   )
-  output$downloadData2 <- downloadHandler(
-    filename = "MergedData.csv",
-    content = function(file) {
-      write.csv(MergedData, file, row.names = FALSE)
-    }
-  )
-  output$downloadData3 <- downloadHandler(
-    filename = "CalibrationData.csv",
-    content = function(file) {
-      write.csv(CalibrationData, file, row.names = FALSE)
-    }
-  )
-  
-  observe({recursiveCombReps()})
-  recursiveCombReps <- eventReactive(input$combReps,{
-    isolate({
-      Cols <- c(grep("Mean", colnames(MergedData)),
-                grep("Median", colnames(MergedData)))
-      RES <- NULL
-      if(input$colorsBands > 1){
-        DF <- MergedData[,c(input$combRepsColSI, input$combRepsColCL)]
-        DFuni <- DF[!duplicated(DF),]
-        for (i in 1:nrow(DFuni)) {
-          sel <- DF[,1] == DFuni[i,1] & DF[,2] == DFuni[i,2]
-          tmp <- MergedData[sel, ]
-          tmp2 <- tmp[1, ]
-          if (input$radioReps == 1) #mean
-            tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
-          if (input$radioReps == 2) #median
-            tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
-          RES <- rbind(RES, tmp2)
-        }
-      }else{
-        DF <- MergedData[,input$combRepsColSI]
-        for (spl in unique(MergedData[, input$combRepsColSI])) {
-          tmp <- MergedData[DF == spl, ]
-          tmp2 <- tmp[1, ]
-          if (input$radioReps == 1) #mean
-            tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
-          if (input$radioReps == 2) #median
-            tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
-          RES <- rbind(RES, tmp2)
-        }
-      }
-      rownames(RES) <- 1:nrow(RES)
-      RES <- RES[order(RES[,input$combRepsColSI]),]
-      CalibrationData <<- RES
-      
-      output$calibration <- renderDT({
-        datatable(RES)
-      })
-    })
-  })
-  
-  observe({recursiveReshapeWide()})
-  
-  recursiveReshapeWide <- eventReactive(input$reshapeWide,{
-    isolate({
-      rm.file <- (colnames(CalibrationData) != colnames(MergedData)[1] &
-                    colnames(CalibrationData) != input$reshapeCol)
-      DF.split <- split(CalibrationData[,rm.file], CalibrationData[,input$reshapeCol])
-      
-      N <- length(unique(CalibrationData[,input$reshapeCol]))
-      if(N > 1){
-        DF <- DF.split[[1]]
-        Cols <- c(grep("Mean", colnames(DF)),
-                  grep("Median", colnames(DF)))
-        Cols <- c(Cols, which(colnames(DF) == input$combRepsColSI))
-        for(i in 2:N){
-          DF <- merge(DF, DF.split[[i]][,Cols], by = input$combRepsColSI,
-                      suffixes = paste0(".", names(DF.split)[c(i-1,i)]))
-        }
-        CalibrationData <<- DF
-      }else{
-        DF <- CalibrationData
-      }
-      
-      output$calibration <- renderDT({
-        datatable(DF)
-      })
-    })
-  })
-  
-  MODELNUM <- 1
-
-  observe({recursiveRunCali()})
-
-  recursiveRunCali <- eventReactive(input$runCali,{
-    isolate({
-      output$results <- renderUI({
-        f7Block(
-          strong = TRUE,
-          h3("Results of Calibration Analysis"),
-          h4("Calibration model"),
-          verbatimTextOutput("modelSummary"), br(),
-          plotOutput("plot5"), br(),
-          verbatimTextOutput("LOB"),
-          verbatimTextOutput("LOD"),
-          verbatimTextOutput("LOQ")
-        )
-      })
-      
-      # flush the output and plots
-      output$LOB <- renderText({})
-      output$LOD <- renderText({})
-      output$LOQ <- renderText({})
-      output$plot5 <- renderPlot({})
-      
-      PATH.OUT <- input$folder
-      if (!file.exists(PATH.OUT)) dir.create(PATH.OUT)
-      
-      concVar <- input$concVar
-      respVar <- paste0("(",input$respVar,")")
-
-      if(input$useLog){
-        if(input$chosenModel == "Generalized additive model (gam)"){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
-        }else{
-          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
-        }
-      }else{
-        if(input$chosenModel == "Generalized additive model (gam)"){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
-        }else{
-          FORMULA <- paste0(respVar, " ~ ", concVar)
-        }
-      }
-      
-      
-      if(input$chosenModel == "Linear model (lm)" && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-      } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
-      } else if(input$chosenModel == "Generalized additive model (gam)" && !inherits(try(gam(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
-      } else {
-        output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
-          print(paste0("Formula: ",FORMULA))})
-        f7Toast(text="Error in the formula!", position="top", session=session)
-        updateF7Tabs(session=session, id="tabs", selected = "Results")
-        return(NULL)
-      }
-      
-      f7Toast(text=paste("Fitting the model..."), position="top", session=session)
-      
-      SUBSET <- input$subset
-      
-      FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
-      
-      save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-           file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
-      if (input$chosenModel == "Linear model (lm)") {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
-                                     package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
-      } else if (input$chosenModel == "Local polynomial model (loess)") {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(loess).Rmd",
-                                     package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
-      } else if (input$chosenModel == "Generalized additive model (gam)") {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
-                                     package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
-      }
-      
-      rmarkdown::render(input = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"),
-                        output_file = paste0(PATH.OUT, "/", FILENAME, "_Analysis.html"))
-      
-      # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
-      
-      output$modelSummary <- renderPrint({ fit })
-      
-      output$plot5 <- renderPlot({
-        modelPlot
-      })
-      output$LOB <- renderText({
-        paste0("Limit of Blank (LOB): ", signif(LOB, 3))
-      })
-      output$LOD <- renderText({
-        paste0("Limit of Detection (LOD): ", signif(LOD, 3))
-      })
-      output$LOQ <- renderText({
-        paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
-      })
-      
-      # Adding the analysis name and model formula to the table
-      analysisName <- rep(input$analysisName, nrow(CalibrationData))
-      modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      CalibrationData <- cbind(CalibrationData, analysisName, modelFormula)
-      output$calibration <- renderDT({
-        datatable(CalibrationData)
-      })
-      
-      MODELNUM <<- MODELNUM + 1
-      
-      updateF7Text(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
-      
-      updateF7Tabs(session=session, id="tabs", selected = "Results")
-    })
-  })
-  
-  observe(resetFolder())
-  
-  resetFolder <- eventReactive(input$folder,{
-    isolate({
-      if(substring(input$folder,1,nchar(file.path(fs::path_home()))) != file.path(fs::path_home()))
-        updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home())) 
-    })
-  })
-  
-  observe({recursiveOpenReport()})
-  
-  recursiveOpenReport <- eventReactive(input$openReport,{
-    isolate({
-      browseURL(paste0(input$folder, "/", FILENAME, "_Analysis.html"),
-                browser = getOption("browser"))
-    })
-  })
   
   # Quantification module ------------------------------------------------------
   predictData <- NULL

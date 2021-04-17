@@ -333,21 +333,3 @@ analysis_ui <- function(request) {
     )
   )
 }
-
-golem_add_external_resources <- function(){
-  
-  add_resource_path(
-    'www', app_sys('app/www')
-  )
- 
-  tags$head(
-    favicon(),
-    bundle_resources(
-      path = app_sys('app/www'),
-      app_title = 'LFApp'
-    )
-    # Add here other external resources
-    # for example, you can add shinyalert::useShinyalert() 
-  )
-}
-

@@ -395,7 +395,7 @@ core_mobile_server <- function(input, output, session){
             if(input$invert=="Yes") {
               img <- 1 - img
             }
-            Background.Threshold[count1] <- MultiFlowExt::triangle(img, input$tri_offset)
+            Background.Threshold[count1] <- triangle(img, input$tri_offset)
             signal <- EBImage::imageData(img) > Background.Threshold[count1]
             EBImage::imageData(img) <- signal
             plot(img)
@@ -420,7 +420,7 @@ core_mobile_server <- function(input, output, session){
             if(input$invert=="Yes") {
               img <- 1 - img
             }
-            thr <- MultiFlowExt::triangle(img, input$tri_offset)
+            thr <- triangle(img, input$tri_offset)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])
@@ -447,7 +447,7 @@ core_mobile_server <- function(input, output, session){
             if(input$invert=="Yes") {
               img <- 1-img
             }
-            Background.Threshold[count1] <- MultiFlowExt::threshold_li(img)
+            Background.Threshold[count1] <- threshold_li(img)
             signal <- EBImage::imageData(img) > Background.Threshold[count1]
             EBImage::imageData(img) <- signal
             plot(img)
@@ -472,7 +472,7 @@ core_mobile_server <- function(input, output, session){
             if(input$invert=="Yes") {
               img <- 1-img
             }
-            thr <- MultiFlowExt::threshold_li(img, tolerance=input$tri_offset)
+            thr <- threshold_li(img, tolerance=input$tri_offset)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])

@@ -17,8 +17,7 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
     if (!t_next>0 & !t_next<max(image)) {
       stop(sprintf("The threshold_li must be greater than 0 and lesser than max
                    value of the image. threshold_li is %s", threshold_li))
-    }
-    else {
+    } else {
       stop("The initial_guess has incorrect class. It should be numeric or a 
            function that returns numeric value.")
     }

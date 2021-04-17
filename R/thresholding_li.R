@@ -1,7 +1,3 @@
-#' Li thresholding algorithm
-#'
-#' @export
-
 threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callback=NULL) {
   # For Li's algorithm to work, the image should be positive
   image_min <- min(image)
@@ -28,7 +24,7 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
     }
   }
   # The difference between t_next and t_curr should be equal to the tolerance.
-  t_curr <- tolerance * -2
+  t_curr <- tolerance * (-2)
   
   if (!is.null(iter_callback)) {
     iter_callback(t_next + image_min)
@@ -50,5 +46,5 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
     }
   }
   threshold <- t_next + image_min
-  return(threshold)
+  threshold
 }

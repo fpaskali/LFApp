@@ -1,8 +1,9 @@
 \name{triangle}
 \alias{triangle}
-\title{Triangle algorithm}
+\title{Triangle Thresholding Algorithm}
 \description{
-  The function computes a background theshold using the triangle algorithm.
+  The function computes a background theshold of an image using the triangle 
+  algorithm.
 }
 \usage{
 triangle(image, offset = 0.2, breaks = 256)

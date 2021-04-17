@@ -1,20 +1,3 @@
-#' The application User-Interface
-#' 
-#' @param request Internal parameter for `{shiny}`. 
-#'     DO NOT REMOVE.
-#' @import shiny
-#' @import shinyjs
-#' @import stats
-#' @importFrom EBImage otsu readImage colorMode
-#' @importFrom fs path_home dir_create
-#' @importFrom DT DTOutput renderDT datatable
-#' @importFrom rmarkdown render
-#' @importFrom ggplot2 ggplot geom_point geom_abline ylab annotate
-#' @importFrom shinythemes shinytheme
-#' @importFrom shinyjs useShinyjs
-#' @noRd
-
-
 core_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources

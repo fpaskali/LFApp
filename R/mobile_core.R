@@ -1,9 +1,3 @@
-library(shiny)
-library(shinyMobile)
-library(EBImage)
-library(DT)
-library(ggplot2)
-
 ui <- f7Page(
   title = "Tab Layout",
   f7TabLayout(

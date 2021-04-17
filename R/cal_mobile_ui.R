@@ -1,4 +1,4 @@
-ui <- f7Page(
+cal_mobile_ui <- f7Page(
   title = "Tab Layout",
   f7TabLayout(
     # Maybe the navbar will be removed later.

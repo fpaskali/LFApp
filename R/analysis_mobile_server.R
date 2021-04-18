@@ -483,7 +483,7 @@ analysis_mobile_server <- function(input, output, session){
             if(input$invert=="Yes") {
               img <- 1-img
             }
-            thr <- threshold_li(img, tolerance=input$tri_offset)
+            thr <- threshold_li(img)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])

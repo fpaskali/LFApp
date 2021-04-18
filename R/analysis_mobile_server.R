@@ -8,7 +8,6 @@ analysis_mobile_server <- function(input, output, session){
   IntensData <- NULL
   ExpInfo <- NULL
   MergedData <- NULL
-  combinedData.red <- NULL
   FILENAME <- NULL
   fit <- NULL
   modelPlot <- NULL
@@ -884,8 +883,8 @@ analysis_mobile_server <- function(input, output, session){
       
       
       if(input$chosenModel == "Linear model (lm)" && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-      } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
-      } else if(input$chosenModel == "Generalized additive model (gam)" && !inherits(try(gam(as.formula(FORMULA), data = combinedData.red), silent = TRUE), "try-error")){
+      } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
+      } else if(input$chosenModel == "Generalized additive model (gam)" && !inherits(try(gam(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
       } else {
         output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
           print(paste0("Formula: ",FORMULA))})

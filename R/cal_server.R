@@ -29,7 +29,7 @@ cal_server <- function( input, output, session ) {
     }
     if(input$upload == 2){
       # using sample image
-      img <- readImage(system.file("images", "sample.TIF", package="MultiFlowExt"))
+      img <- readImage(system.file("images", "sample.TIF", package="LFApp"))
       shinyImageFile$shiny_img_origin <- img
       shinyImageFile$shiny_img_cropped <- img
       shinyImageFile$shiny_img_final <- img

@@ -5,6 +5,7 @@ quan_mobile_server <- function(input, output, session){
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL, 
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
+  calFun <- NULL
   
   # checks upload for file imput
   observe({

@@ -27,18 +27,34 @@ remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```
 
 ## Start App
-LFApp consist of four different modules. They can be started with one of the following commands: 
+LFApp consist of four different modules where there is a desktop and a 
+mobile version for each module. They can be started with one of the following 
+commands: 
 
 ```{r}
-# LFA App core
+## desktop versions
+## LFA App core
 LFApp::run_core()
 
-# LFA App quantification
+## LFA App quantification
 LFApp::run_quan()
 
-# LFA App calibration
+## LFA App calibration
 LFApp::run_cal()
 
-# LFA App full analysis
+## LFA App full analysis
 LFApp::run_analysis()
+
+## mobile versions
+## LFA App core
+LFApp::run_mobile_core()
+
+## LFA App quantification
+LFApp::run_mobile_quan()
+
+## LFA App calibration
+LFApp::run_mobile_cal()
+
+## LFA App full analysis
+LFApp::run_mobile_analysis()
 ```

@@ -501,24 +501,24 @@ cal_server <- function( input, output, session ) {
       colnames(Med) <- paste0("Median", 1:input$bands)
       # TODO Here else if will improve the app.
       if(input$thresh == 1){
-        BG.method <- matrix(c("Otsu", NA), nrow = 1,
-                            ncol = 2, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Probability")
+        BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
+                            ncol = 3, byrow = TRUE)
+        colnames(BG.method) <- c("Background", "Offset", "Probability")
       }
       if(input$thresh == 2){
-        BG.method <- matrix(c("quantile", input$quantile1),
-                            nrow = 1, ncol = 2, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Probability")
+        BG.method <- matrix(c("quantile", NA, input$quantile1),
+                            nrow = 1, ncol = 3, byrow = TRUE)
+        colnames(BG.method) <- c("Background", "Offset", "Probability")
       }
       if(input$thresh == 3){
-        BG.method <- matrix(c("triangle", NA), nrow = 1, 
-                            ncol = 2, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Probability")        
+        BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
+                            ncol = 3, byrow = TRUE)
+        colnames(BG.method) <- c("Background", "Offset", "Probability")        
       }
       if(input$thresh == 4){
-        BG.method <- matrix(c("Li", NA), nrow = 1, 
-                            ncol = 2, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Probability")        
+        BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
+                            ncol = 3, byrow = TRUE)
+        colnames(BG.method) <- c("Background", "Offset", "Probability")        
       }
       seg.list <- shinyImageFile$segmentation_list
       img <- seg.list[[1]][[1]]

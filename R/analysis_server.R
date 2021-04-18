@@ -8,7 +8,6 @@ analysis_server <- function( input, output, session ) {
   IntensData <- NULL
   ExpInfo <- NULL
   MergedData <- NULL
-  combinedData.red <- NULL
   FILENAME <- NULL
   fit <- NULL
   modelPlot <- NULL

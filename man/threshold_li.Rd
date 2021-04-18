@@ -10,9 +10,9 @@ threshold_li(image, tolerance = NULL, initial_guess = NULL, iter_callback = NULL
 }
 \arguments{
   \item{image}{ object of class \code{Image} from package EBImage. }
-  \item{tolerance}{ \code{NULL} or .}
-  \item{initial_guess}{ \code{NULL} or . }
-  \item{iter_callback}{ \code{NULL} or . }
+  \item{tolerance}{ optional tolerance threshold.}
+  \item{initial_guess}{ optional initial value for the minimization. }
+  \item{iter_callback}{ optional function applied to the minimizsation criterion. }
 }
 \details{
   For more details about the method see Li and Lee (1993) as well as 

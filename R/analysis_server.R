@@ -2,9 +2,20 @@ analysis_server <- function( input, output, session ) {
   ###### FIRST TAB
   
   options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  ## initializations
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
+  ExpInfo <- NULL
+  MergedData <- NULL
+  combinedData.red <- NULL
+  FILENAME <- NULL
+  fit <- NULL
+  modelPlot <- NULL
+  LOB <- NULL
+  LOD <- NULL
+  LOQ <- NULL
+  calFun <- NULL
   
   #checks upload for file input
   observe({

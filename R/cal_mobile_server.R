@@ -2,9 +2,19 @@ cal_mobile_server <- function(input, output, session){
   ########## FIRST TAB
   
   options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  ## initializations
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL, 
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
+  ExpInfo <- NULL
+  MergedData <- NULL
+  combinedData.red <- NULL
+  FILENAME <- NULL
+  fit <- NULL
+  modelPlot <- NULL
+  LOB <- NULL
+  LOD <- NULL
+  LOQ <- NULL
   
   # checks upload for file imput
   observe({
@@ -958,12 +968,4 @@ cal_mobile_server <- function(input, output, session){
                 browser = getOption("browser"))
     })
   })
-  
-  #allows user to download prediction
-  output$downloadData4 <- downloadHandler(
-    filename = "PredictData.csv",
-    content = function(file) {
-      write.csv(predictData, file, row.names = FALSE)
-    }
-  )
 }

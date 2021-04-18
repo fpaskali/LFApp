@@ -2,9 +2,13 @@ core_server <- function( input, output, session ) {
   # Cropping and segmentation tab ----------------------------------------------
   
   options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  ## initialization
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
+  ExpInfo <- NULL
+  MergedData <- NULL
+  CalibrationData <- NULL
   
   #checks upload for file input
   observe({

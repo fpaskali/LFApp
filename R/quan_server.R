@@ -5,8 +5,11 @@ quan_server <- function( input, output, session ) {
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
+  ExpInfo <- NULL
+  MergedData <- NULL
+  CalibrationData <- NULL
   calFun <- NULL
-
+  
   #checks upload for file input
   observe({
     #default: upload image

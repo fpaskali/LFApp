@@ -163,7 +163,7 @@ cal_mobile_ui <- f7Page(
                                   ".csv")),
                 f7AccordionItem(
                   title = "CSV options",
-                  f7checkBox("header", "Header", TRUE),
+                  f7Checkbox("header", "Header", TRUE),
                   f7Radio("sep", "Separator",
                           choices = c("Comma ( , )",
                                       "Semicolon ( ; )",
@@ -272,7 +272,7 @@ cal_mobile_ui <- f7Page(
               f7TextArea("subset", label = "Optional: specify subset (logical R expression)"),
               f7Picker("concVar", label = "Specify column with concentration", choices=""),
               # f7Text("concVar", "Specify column with concentration"),
-              f7checkBox("useLog", "Logarithmize concentration", value=FALSE),
+              f7Checkbox("useLog", "Logarithmize concentration", value=FALSE),
               f7Block(
                 strong = TRUE,
                 f7Block(

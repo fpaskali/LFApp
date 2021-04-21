@@ -18,22 +18,27 @@ The LFA shiny apps [@Shiny2020] consist of four modular Shiny applications:
 
 (1) LFA App core for image acquisition, editing, region of interest definition 
 via gridding, background correction with multiple available methods, as well as 
-intensity data extraction of the pre-defined bands of the analysed LFAs. 
+intensity data extraction of the pre-defined bands of the analysed LFAs. More
+precisely, it consists of Tab 1, Tab 2 and parts of Tab 3 described in detail 
+below.
 
-(2) LFA App calibration, which also includes tools for data processing, adding 
-additional information and calibration functionality. 
+(2) LFA App calibration extends the LFA App core by methods for merging the
+intensity data with information from experiments, computation of calibration 
+models and the generation of a report about the calibration analysis. The 
+functionality corresponds to the Tabs 1-6 described below.
 
-(3) LFA App quantification, which enables quantification of the extracted 
-intensity values via loading existing calibration models and 
+(3) LFA App quantification enables quantification of the extracted intensity 
+values via loading existing calibration models. It extends the LFA App core
+by Tab 7 described below.
 
-(4) LFA App Analysis, which includes all the modules mentioned above and enables 
-full analysis in one application.
+(4) LFA App Analysis includes the full functionality mentioned above and 
+enables full analysis in one application. That is, it consists of Tab 1-7.
 
 
 The graphical user interface of the apps is built in a modular way divided into 
 several tabs, where each tab represents a specific step of the workflow. While 
-the applications can be used in a sequential fashion, the specific steps can be 
-carried out individually. 
+the applications can be used in a sequential fashion, the specific steps can 
+also be carried out individually. 
 
 
 # Tab 1: Cropping and Segmentation
@@ -176,7 +181,7 @@ Clicking "SWITCH TO EXPERIMENT INFO" changes the Tab to Tab 4, where information
 about the experiment can be loaded.
 
 
-## Tab 4: Experiment Info
+# Tab 4: Experiment Info
 
 ## 1) Upload Experiment Info or upload existing merged data and go to 5)
 

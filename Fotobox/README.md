@@ -1,4 +1,5 @@
-# Fotobox by Christoph Ruppert (christoph.ruppert@googlemail.com)
+# Fotobox by Christoph Ruppert 
+christoph.ruppert@googlemail.com
 
 For more details see also the Electronic Supporting Material of 
 Mahmoud et al. (2021) (https://doi.org/10.1016/j.snb.2020.129246).

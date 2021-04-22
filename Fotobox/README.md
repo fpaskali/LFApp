@@ -34,6 +34,9 @@ Output: I=350mA, 0.5-10V DC
 
 Heatsink: ICK S R 50 x 20 (Fischer Elektronik, Germany) (diam=50mm, h=20mm)
 
+The LED-module was attached to the center of the heatsink with double sided heat 
+conducting adhesive tape attached to the darkbox with heat resistant glue and 
+wired according to the manufacturer's recommendation.
 
 ![Fotobox2](Fotobox2.jpg)
 

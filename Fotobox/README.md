@@ -1,12 +1,12 @@
-# Fotobox by Christoph Ruppert 
+# Photobox by Christoph Ruppert 
 christoph.ruppert@googlemail.com
 
 For more details see also the Electronic Supporting Material of 
 Mahmoud et al. (2021) (https://doi.org/10.1016/j.snb.2020.129246).
 
-![Fotobox1](Fotobox1.jpg)
+![Photobox1](Photobox1.jpg)
 
-## Our fotobox consists of four parts:
+## Our photobox consists of four parts:
 
 1) Bottom (105 x 133 x 117 mm) -> Bottom.stl
 
@@ -39,5 +39,5 @@ The LED-module was attached to the center of the heatsink with double sided heat
 conducting adhesive tape attached to the darkbox with heat resistant glue and 
 wired according to the manufacturer's recommendation.
 
-![Fotobox2](Fotobox2.jpg)
+![Photobox2](Photobox2.jpg)
 

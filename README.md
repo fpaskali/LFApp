@@ -5,9 +5,9 @@ The repository includes the development version of R package LFApp
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
 
-## Testing our app: shinyapps.io
+## Testing our apps: shinyapps.io
 
-Our app can also be tested on shinyapps.io. The desktop version of our full
+Our apps can also be tested on shinyapps.io. The desktop version of our full
 purpose analysis app is at
 
 https://lfapp.shinyapps.io/LFAnalysis/

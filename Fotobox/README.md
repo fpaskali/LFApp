@@ -17,5 +17,8 @@ Our fotobox consists of four parts:
 
 We plan to add adapters for other smartphones in the future.
 
+The 3D-printed parts were produced with an Ultimaker 3 3D-printer at 0.2mm
+layer height resolution in black and red PLA.
+
 ![Fotobox2](Fotobox2.jpg)
 

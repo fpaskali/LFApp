@@ -1,0 +1,99 @@
+---
+title: "Calibration Analysis"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+    number_sections: true
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import of Data
+
+We import the data and select the variables needed for the analysis.
+```{r}
+tmp <- strsplit(FORMULA, "~")[[1]]
+y.var <- names(unlist(sapply(colnames(CalibrationData), 
+                             grep, x = tmp[1])))
+x.vars <- names(unlist(sapply(colnames(CalibrationData), 
+                              grep, x = tmp[2])))
+if(SUBSET != ""){
+  calData <- eval(call("subset", x =  CalibrationData,
+                       subset = parse(text = SUBSET)))
+}else{
+  calData <- CalibrationData
+}
+calData <- calData[,c(y.var, x.vars)]
+calData
+```
+
+
+# Model
+
+We will apply the following model.
+```{r}
+FORMULA
+```
+
+
+# Analysis
+
+We now fit (simple) linear model.
+```{r}
+fit <- lm(as.formula(FORMULA), data = calData)
+summary(fit)
+```
+
+We determine the inverse of the fitted model.
+```{r}
+ab <- coef(fit)
+names(ab) <- NULL
+predFunc <- function(newdata){}
+body(predFunc) <- substitute({ with(newdata, (eval(y)-a)/b) }, 
+                             list(y = parse(text = respVar), 
+                                a = ab[1], 
+                                b = ab[2]))
+```
+
+We plot the given concentrations against the fitted values.
+```{r, warning=FALSE}
+library(ggplot2)
+modelPlot <- ggplot(calData, aes_string(x = concVar, y = respVar)) +
+            geom_point() + geom_smooth(method = "lm") +
+            annotate("text",  x=-Inf, y = Inf,
+            label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2), 
+                              list(R2 = summary(fit)$r.squared, adj.R2 = summary(fit)$adj.r.squared)), 
+            vjust=1, hjust=0, size = 5)
+modelPlot
+```
+
+# Computation of LOB, LOD and LOQ
+
+We compute limit of blank (LOB), limit of detection (LOD) and limit of 
+quantification (LOQ) by inverting the regression fit. We get the LOB by inverting 
+the upper bound of the one-sided 95\% confidence interval at concentration $0$. 
+In caso of the LOD, the upper-bound of the 99.95\% confidence interval at 
+concentration $0$ is inverted. LQQ we define as $3\times\textrm{LOD}$.
+```{r}
+LOB <- (confint(fit, parm = 1, level = 0.90)[2]-ab[1])/ab[2]
+names(LOB) <- "LOB"
+LOB
+LOD <- (confint(fit, parm = 1, level = 0.999)[2]-ab[1])/ab[2]
+names(LOD) <- "LOD"
+LOD
+LOQ <- 3*LOD
+names(LOQ) <- "LOQ"
+LOQ
+```
+
+# Software
+
+```{r}
+sessionInfo()
+```
+

@@ -1,0 +1,105 @@
+---
+title: "Calibration Analysis"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+    number_sections: true
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import of Data
+
+We import the data and select the variables needed for the analysis.
+```{r}
+tmp <- strsplit(FORMULA, "~")[[1]]
+y.var <- names(unlist(sapply(colnames(CalibrationData), 
+                             grep, x = tmp[1])))
+x.vars <- names(unlist(sapply(colnames(CalibrationData), 
+                              grep, x = tmp[2])))
+if(SUBSET != ""){
+  calData <- eval(call("subset", x =  CalibrationData,
+                       subset = parse(text = SUBSET)))
+}else{
+  calData <- CalibrationData
+}
+calData <- calData[,c(y.var, x.vars)]
+calData
+```
+
+
+# Model
+
+We will apply the following model.
+```{r}
+FORMULA
+```
+
+
+# Analysis
+
+We now fit local polynomial model.
+```{r}
+fit <- loess(as.formula(FORMULA), data = calData)
+summary(fit)
+```
+
+We compute the predicted concentration values and determine the inverse of the 
+fitted model by spline interpolation.
+```{r}
+N <- 100 # number of points for interpolation
+ab <- coef(fit)
+conc <- seq(from = 0, to = max(calData[,concVar]), len = N)
+newDF <- data.frame(conc = conc)
+names(newDF) <- concVar
+resp <- predict(fit, newdata = newDF)
+names(resp) <- NULL
+predFunc <- function(newdata){}
+body(predFunc) <- substitute({ Y <- with(newdata, eval(y))
+                         fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
+                         fun(Y) }, list(y = parse(text = respVar),
+                                        resp = resp,
+                                        conc = conc))
+  
+y0 <- predict(fit, newdata = newDF[1,,drop = FALSE], se = TRUE)
+fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
+```
+
+We plot the given concentrations against the fitted values.
+```{r}
+library(ggplot2)
+modelPlot <- ggplot(calData, aes_string(x = concVar, y = respVar)) +
+                geom_point() + geom_smooth(method = "loess")
+modelPlot
+```
+
+# Computation of LOB, LOD and LOQ
+
+We compute limit of blank (LOB), limit of detection (LOD) and limit of 
+quantification (LOQ) by inverting the regression fit. We get the LOB by inverting 
+the upper bound of the one-sided 95\% confidence interval at concentration $0$. 
+In caso of the LOD, the upper-bound of the 99.95\% confidence interval at 
+concentration $0$ is inverted. LQQ we define as $3\times\textrm{LOD}$.
+```{r}
+LOB <- fun(qt(0.95, df = y0$df)*y0$se.fit)
+names(LOB) <- "LOB"
+LOB
+LOD <- fun(qt(0.9995, df = y0$df)*y0$se.fit)
+names(LOD) <- "LOD"
+LOD
+LOQ <- 3*LOD
+names(LOB) <- "LOQ"
+LOQ
+```
+
+# Software
+
+```{r}
+sessionInfo()
+```
+

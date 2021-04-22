@@ -23,8 +23,8 @@ layer height resolution in black and red PLA.
 
 ## As LED light source we used:
 
-UV-LED: NCSU276A UV SMD-LED on 10x10mm circuit board (Nichia, Japan)
-        P=780mW, λ=365nm center wavelength
+UV-LED: NCSU276A UV SMD-LED on 10x10mm circuit board (Nichia, Japan) 
+(P=780mW, λ=365nm center wavelength)
 
 Power supply: SLP033SS (Eaglerise Electric, China)
 

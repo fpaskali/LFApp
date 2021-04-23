@@ -174,6 +174,18 @@ quan_ui <- function(request) {
                   tabPanel("Quantification", value = "tab4",
                            sidebarLayout(
                              sidebarPanel(
+                               radioButtons("quanUpload",
+                                            label = ("You can use Intensity Data or upload new data"),
+                                            choices = list("Use Intensity Data" = 1,
+                                                           "Upload Data" = 2),
+                                            selected = 2),
+                               conditionalPanel(
+                                 condition = "input.quanUpload == 2",
+                                 fileInput(inputId = 'quanData',
+                                           label = 'Upload Data',
+                                           accept = c(".csv"))
+                               ),
+                               hr(style="border-color: black"),
                                h5("Load existing model from file", style="font-weight:bold"),
                                fileInput("model", "Select model",
                                          multiple = FALSE,

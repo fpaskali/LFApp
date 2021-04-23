@@ -823,7 +823,6 @@ analysis_mobile_server <- function(input, output, session){
   observe({recursiveRunCali()})
 
   recursiveRunCali <- eventReactive(input$runCali,{
-    isolate({
       output$results <- renderUI({
         f7Block(
           strong = TRUE,
@@ -941,17 +940,19 @@ analysis_mobile_server <- function(input, output, session){
       colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
                              paste0(input$analysisName, ".formula"), 
                              paste0(input$analysisName, ".fit"))
-      CalibrationData <<- cbind(CalibrationData, modelDF)
+      DF <- cbind(CalibrationData, modelDF)
+      CalibrationData <<- DF
+      
       output$calibration <- renderDT({
-        datatable(CalibrationData)
+        datatable(DF)
       })
+      
       
       MODELNUM <<- MODELNUM + 1
       
       updateF7Text(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
       
       updateF7Tabs(session=session, id="tabs", selected = "Results")
-    })
   })
   
   observe(resetFolder())

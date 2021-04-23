@@ -616,21 +616,6 @@ analysis_server <- function( input, output, session ) {
       })
     })
   })
-  observeEvent(input$intensFile,{
-    output$intens <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-  })
-  observeEvent(input$expFile,{
-    output$experiment <- renderDT({})
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
-  observeEvent(input$prepFile,{
-    output$calibration <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
   
   observe({recursiveExpInfo()})
   
@@ -825,8 +810,11 @@ analysis_server <- function( input, output, session ) {
       }
       
       if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
+        modelName <- "lm"
       } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
+        modelName <- "loess"
       } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
+        modelName <- "gam"
       } else {
         output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
           print(paste0("Formula: ",FORMULA))})
@@ -878,11 +866,20 @@ analysis_server <- function( input, output, session ) {
       })
       
       # Adding the analysis name and model formula to the table
-      analysisName <- rep(input$analysisName, nrow(CalibrationData))
+      modelName <- rep(modelName, nrow(CalibrationData))
       modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      CalibrationData <- cbind(CalibrationData, analysisName, modelFormula)
+      if (input$chosenModel == 2) {
+        modelDF <- cbind(modelName, modelFormula, fit$fitted)
+      } else {
+        modelDF <- cbind(modelName, modelFormula, fit$fitted.values)
+      }
+      colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
+                             paste0(input$analysisName, ".formula"), 
+                             paste0(input$analysisName, ".fit"))
+      DF <- cbind(CalibrationData, modelDF)
+      CalibrationData <<- DF
       output$calibration <- renderDT({
-        datatable(CalibrationData)
+        datatable(DF)
       })
       
       MODELNUM <<- MODELNUM + 1
@@ -970,7 +967,9 @@ analysis_server <- function( input, output, session ) {
   })
   
   # Quantification module ------------------------------------------------------
-  predictData <- NULL
+  observeEvent(input$quanData, {
+    quanData <<- read.csv(input$quanData$datapath)
+  })
   
   observeEvent(input$model, {
     calFun <<- readRDS(input$model$datapath)
@@ -980,13 +979,24 @@ analysis_server <- function( input, output, session ) {
   
   predictConc <- eventReactive(input$predict, {
     isolate(
-      if(!is.null(IntensData)) {
-        calConc <- calFun(IntensData)
-        predictData <<- cbind(IntensData, calConc)
-        output$quant <- renderDT({
-          DF <- predictData
-          datatable(DF)
-        })
+      if (!is.null(calFun)) {
+        if (input$quanUpload == 2 && !is.null(quanData)) {
+          calConc <- calFun(quanData)
+          predictData <<- cbind(quanData, calConc)
+          output$quant <- renderDT({
+            DF <- predictData
+            datatable(DF)
+          })
+        } else if(input$quanUpload == 1 && !is.null(IntensData)) {
+          calConc <- calFun(IntensData)
+          predictData <<- cbind(IntensData, calConc)
+          output$quant <- renderDT({
+            DF <- predictData
+            datatable(DF)
+          })
+        } else {
+          output$quant <- renderDT({})
+        }
       }
     )
   })

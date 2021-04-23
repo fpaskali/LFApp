@@ -1,9 +1,9 @@
 cal_mobile_ui <- f7Page(
-  title = "Tab Layout",
+  title = "LFApp mobile calibration",
   f7TabLayout(
     # Maybe the navbar will be removed later.
     navbar = f7Navbar(
-      title="LFApp mobile analysis"
+      title="LFApp mobile calibration"
     ),
     # Each tab has it's own content
     f7Tabs(
@@ -69,7 +69,75 @@ cal_mobile_ui <- f7Page(
                      hover = hoverOpts("plot_hover", delay = 5000, clip = TRUE),
                      brush = "plot_brush"),
           h5("Click and drag to select a region of interest. Double click on the selected region to zoom.", align = "center"),
-          uiOutput("cropButtons")
+          uiOutput("cropButtons"),
+          tags$head(
+            tags$script("
+              $(document).ready(function() {
+                var plot = document.getElementById('plot1')
+        
+                plot.addEventListener('touchmove', function (e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousemove', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+                
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+                
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+        
+                plot.addEventListener('touchend', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mouseup', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+              })
+            "),
+            tags$style("#plot1 { touch-action: none; }")
+          )
         )
       ),
       f7Tab(
@@ -270,8 +338,7 @@ cal_mobile_ui <- f7Page(
                       selected = "Linear model (lm)"),
               f7TextArea("respVar", label = "Specify response variable (R expresssion)"),
               f7TextArea("subset", label = "Optional: specify subset (logical R expression)"),
-              f7Picker("concVar", label = "Specify column with concentration", choices=""),
-              # f7Text("concVar", "Specify column with concentration"),
+              f7Text("concVar", "Specify column with concentration"),
               f7Checkbox("useLog", "Logarithmize concentration", value=FALSE),
               f7Block(
                 strong = TRUE,

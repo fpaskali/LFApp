@@ -639,21 +639,6 @@ cal_mobile_server <- function(input, output, session){
       })
     })
   })
-  observeEvent(input$intensFile,{
-    output$intens <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-  })
-  observeEvent(input$expFile,{
-    output$experiment <- renderDT({})
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
-  observeEvent(input$prepFile,{
-    output$calibration <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
   
   observe({recursiveExpInfo()})
   
@@ -882,9 +867,20 @@ cal_mobile_server <- function(input, output, session){
       
       
       if(input$chosenModel == "Linear model (lm)" && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
+        modelName = "lm"
       } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
+        modelName = "loess"
       } else if(input$chosenModel == "Generalized additive model (gam)" && !inherits(try(gam(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
+        modelName = "gam"
       } else {
+        output$results <- renderUI({
+          f7Block(
+            strong = TRUE,
+            h3("Results of Calibration Analysis"),
+            h4("Calibration model"),
+            verbatimTextOutput("modelSummary")
+          )
+        })
         output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
           print(paste0("Formula: ",FORMULA))})
         f7Toast(text="Error in the formula!", position="top", session=session)
@@ -935,11 +931,20 @@ cal_mobile_server <- function(input, output, session){
       })
       
       # Adding the analysis name and model formula to the table
-      analysisName <- rep(input$analysisName, nrow(CalibrationData))
+      modelName <- rep(modelName, nrow(CalibrationData))
       modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      CalibrationData <- cbind(CalibrationData, analysisName, modelFormula)
+      if (input$chosenModel == "Local polynomial model (loess)") {
+        modelDF <- cbind(modelName, modelFormula, fit$fitted)
+      } else {
+        modelDF <- cbind(modelName, modelFormula, fit$fitted.values)
+      }
+      colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
+                             paste0(input$analysisName, ".formula"), 
+                             paste0(input$analysisName, ".fit"))
+      DF <- cbind(CalibrationData, modelDF)
+      CalibrationData <<- DF
       output$calibration <- renderDT({
-        datatable(CalibrationData)
+        datatable(DF)
       })
       
       MODELNUM <<- MODELNUM + 1

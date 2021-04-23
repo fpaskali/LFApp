@@ -1168,21 +1168,6 @@ server <- function(input, output, session){
       })
     })
   })
-  observeEvent(input$intensFile,{
-    output$intens <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-  })
-  observeEvent(input$expFile,{
-    output$experiment <- renderDT({})
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
-  observeEvent(input$prepFile,{
-    output$calibration <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
   
   observe({recursiveExpInfo()})
   

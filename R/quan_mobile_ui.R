@@ -1,9 +1,9 @@
 quan_mobile_ui <- f7Page(
-  title = "Tab Layout",
+  title = "LFA mobile app",
   f7TabLayout(
     # Maybe the navbar will be removed later.
     navbar = f7Navbar(
-      title="LFApp mobile analysis"
+      title="LFApp mobile quantification"
     ),
     # Each tab has it's own content
     f7Tabs(
@@ -148,25 +148,43 @@ quan_mobile_ui <- f7Page(
           )
         )
       ),
-      
-       f7Tab(
-         tabName = "Quantification",
-         icon = f7Icon("gauge"),
-         active = FALSE,
-         f7Block(
-           strong = TRUE,
-           h3("Load existing model from file"),
-           f7File(inputId = 'model',
-                  label = 'Select model',
-                  accept = ".rds",
-                  placeholder = "RDS file"),
-           h3("Predict concentration"),
-           f7Button("predict", label = "Predict"),
-           h3("Download concentration data"),
-           f7DownloadButton("downloadData4", "Download data")
-         ),
-         DTOutput("quant")
-       )
+      f7Tab(
+        tabName = "Quantification",
+        icon = f7Icon("gauge"),
+        active = FALSE,
+        f7Block(
+          hairlines = FALSE,
+          strong = TRUE,
+          inset = FALSE,
+          f7Radio(inputId= "quanUpload", 
+                  label="You can use Intensity Data or upload new data", 
+                  choices=list("Use Intensity Data", "Upload Data"), 
+                  selected = "Upload Data"),
+          conditionalPanel(
+            condition = "input.quanUpload == 'Upload Data'",
+            f7File(inputId = 'quanData',
+                   label = 'Upload Image',
+                   accept = c("csv"))
+          )
+        ),
+        f7Block(
+          strong = TRUE, 
+          h3("Load existing model from file"),
+          f7File(inputId = 'model',
+                 label = 'Select model',
+                 accept = ".rds",
+                 placeholder = "RDS file"),
+          h3("Predict concentration"),
+          f7Button("predict", label = "Predict"),
+          h3("Download concentration data"),
+          f7DownloadButton("downloadData4", "Download data")
+        ),
+        f7Block(
+          strong = TRUE,
+          style = "overflow-x:scroll",
+          DTOutput("quant")
+        )
+      )
     )
   )
 )

@@ -270,7 +270,7 @@ cal_ui <- function(request) {
                                hr(style="border-color: black"),
                                h5("Download calibration data", style="font-weight:bold"),
                                # actionButton("refreshData3", label = "3) Refresh Data"), br(), br(),
-                               downloadButton("downloadData3", "4) Download Data"),
+                               downloadButton("downloadData3", "Download Data"),
                                hr(style="border-color: black"),
                                h5("Calibration", style="font-weight:bold"),
                                textInput("analysisName", label = "Analysis name:", value = "Model1"),

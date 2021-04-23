@@ -6,6 +6,7 @@ quan_mobile_server <- function(input, output, session){
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
   calFun <- NULL
+  quanData <- NULL
   
   # checks upload for file imput
   observe({
@@ -633,7 +634,9 @@ quan_mobile_server <- function(input, output, session){
   )
   
   # Quantification module ------------------------------------------------------
-  predictData <- NULL
+  observeEvent(input$quanData, {
+    quanData <<- read.csv(input$quanData$datapath)
+  })
   
   observeEvent(input$model, {
     calFun <<- readRDS(input$model$datapath)
@@ -643,13 +646,24 @@ quan_mobile_server <- function(input, output, session){
   
   predictConc <- eventReactive(input$predict, {
     isolate(
-      if(!is.null(IntensData)) {
-        calConc <- calFun(IntensData)
-        predictData <<- cbind(IntensData, calConc)
-        output$quant <- renderDT({
-          DF <- predictData
-          datatable(DF)
-        })
+      if (!is.null(calFun)) {
+        if (input$quanUpload == "Upload Data" && !is.null(quanData)) {
+          calConc <- calFun(quanData)
+          predictData <<- cbind(quanData, calConc)
+          output$quant <- renderDT({
+            DF <- predictData
+            datatable(DF)
+          })
+        } else if(input$quanUpload == "Use Intensity Data" && !is.null(IntensData)) {
+          calConc <- calFun(IntensData)
+          predictData <<- cbind(IntensData, calConc)
+          output$quant <- renderDT({
+            DF <- predictData
+            datatable(DF)
+          })
+        } else {
+          output$quant <- renderDT({})
+        }
       }
     )
   })

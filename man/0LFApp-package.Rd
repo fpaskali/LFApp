@@ -17,10 +17,10 @@ and applied to intensity data from new images for determining concentrations.
 Package: \tab LFApp\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
-Date: \tab 2021-04-21\cr
+Date: \tab 2021-04-24\cr
 Depends: \tab R(>= 4.0.0)\cr
 Imports: \tab stats, utils, graphics, methods, mgcv, shiny, shinyjs, shinythemes, shinyFiles, shinyMobile, EBImage, DT, ggplot2, fs\cr
-Suggests: \tab knitr, rmarkdown\cr
+Suggests: \tab knitr, rmarkdown, remotes\cr
 License: \tab LGPL-3\cr
 URL: \tab https://github.com/fpaskali/LFApp\cr
 BugReports: \tab https://github.com/fpaskali/LFApp/issues\cr

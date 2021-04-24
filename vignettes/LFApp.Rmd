@@ -12,6 +12,9 @@ vignette: >
   %\VignetteEncoding{utf8}
 ---
 
+
+<br><br>
+
 # Introduction
 
 The LFA shiny apps [@Shiny2020] consist of four modular Shiny applications: 
@@ -40,8 +43,9 @@ several tabs, where each tab represents a specific step of the workflow. While
 the applications can be used in a sequential fashion, the specific steps can 
 also be carried out individually. 
 
+<br><br>
 
-# Testing our apps without installing our package
+# Testing our apps without installing
 
 Before installing our package, one can also test our apps on https://shinyapps.io. 
 The desktop version of our full purpose analysis app is at
@@ -52,6 +56,7 @@ The respective mobile version is at
 
 https://lfapp.shinyapps.io/mobile_app/
 
+<br><br>
 
 # Installation
 
@@ -69,7 +74,7 @@ BiocManager::install("EBImage", update = FALSE)
 Our package depends on the most recent version of package shinyMobile, which 
 must be installed from github (https://github.com/RinteRface/shinyMobile) by
 
-```{r}
+```{r, eval = FALSE}
 ## Install package remotes
 if(!requireNamespace("remotes", quietly = TRUE)) 
   install.packages("remotes")
@@ -85,6 +90,7 @@ be installed automatically.
 remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```
 
+<br><br>
 
 # Start App
 
@@ -120,6 +126,7 @@ LFApp::run_mobile_cal()
 LFApp::run_mobile_analysis()
 ```
 
+<br><br>
 
 # Tab 1: Cropping and Segmentation
 
@@ -166,6 +173,7 @@ cropped region you can select "RESET".
 The cropping was adapted from the shiny app provided by package ShinyImage 
 [@shinyImage].
 
+<br><br>
 
 # Tab 2: Background
 
@@ -234,6 +242,7 @@ and images are processed one can proceed with "SWITCH TO INTENSITY DATA".
 
 Clicking "SWITCH TO INTENSITY DATA" changes the Tab to Tab 3.
 
+<br><br>
 
 # Tab 3: Intensity Data
 
@@ -266,6 +275,7 @@ of data that was generated with the app saved and then loaded again.
 Clicking "SWITCH TO EXPERIMENT INFO" changes the Tab to Tab 4, where information 
 about the experiment can be loaded.
 
+<br><br>
 
 # Tab 4: Experiment Info
 
@@ -310,6 +320,7 @@ new intensity data on Tab 3 or uploading an already existing merged dataset.
 Clicking "PREPARE CALIBRATION" changes the Tab to Tab 5, where the data can be 
 further preprocessed and the calibration analysis can be started.
 
+<br><br>
 
 # Tab 5: Calibration
 
@@ -389,6 +400,7 @@ the concentrations are added to data used for the calibration. That is, one
 can also run several different calibration models, download the calibration 
 data and use the data to compare the results of different calibration models.
 
+<br><br>
 
 # Tab 6: Results
 
@@ -406,6 +418,7 @@ screenshot.
 
 <p>![](AnalysisReport.png){width=100%}</p>
 
+<br><br>
 
 # Tab 7: Quantification
 
@@ -418,6 +431,7 @@ as well as the predicted concentrations.
 
 <p>![](Quantification.png){width=100%}</p>
 
+<br><br>
 
 # Required R packages
 
@@ -435,5 +449,6 @@ Our app requires the following R packages to work properly:
 * rmarkdown: Dynamic Documents for R [@rmarkdown]
 * ggplot2: Elegant Graphics for Data Analysis [@Wickham.2016]
 
+<br><br>
 
 # References

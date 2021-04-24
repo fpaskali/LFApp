@@ -24,7 +24,8 @@ first via
 
 ```{r, eval = FALSE}
 ## Install package BiocManager
-if(!require(BiocManager)) install.packages("BiocManager")
+if(!requireNamespace("BiocManager", quietly = TRUE)) 
+  install.packages("BiocManager")
 ## Use BiocManager to install EBImage
 BiocManager::install("EBImage", update = FALSE)
 ```
@@ -34,7 +35,8 @@ be installed automatically.
 
 ```{r, eval = FALSE}
 ## Install package remotes
-if(!require(remotes)) install.packages("remotes")
+if(!requireNamespace("remotes", quietly = TRUE)) 
+  install.packages("remotes")
 ## Install package LFApp
 remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```

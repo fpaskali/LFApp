@@ -50,8 +50,8 @@ remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```
 
 ## Start App
-LFApp consist of four different modules where there is a desktop and a 
-mobile version for each module. They can be started with one of the following 
+LFApp consist of four different shiny apps where there is a desktop and a 
+mobile version for each app. They can be started with one of the following 
 commands: 
 
 ```{r}

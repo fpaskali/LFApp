@@ -33,7 +33,7 @@ several tabs, where each tab represents a specific step of the workflow. While
 the applications can be used in a sequential fashion, the specific steps can 
 also be carried out individually. 
 
-[![LFApp](LFApp.png){width=100%}]
+![LFApp](LFApp.png)
 
 
 ## Testing our apps: shinyapps.io

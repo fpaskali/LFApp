@@ -7,7 +7,8 @@ The repository includes the development version of R package LFApp
 
 ## Description
 
-The LFA shiny apps [@Shiny2020] consist of four modular Shiny applications: 
+The LFA shiny apps include in package LFApp consist of four modular Shiny 
+applications: 
 
 (1) LFA App core for image acquisition, editing, region of interest definition 
 via gridding, background correction with multiple available methods, as well as 

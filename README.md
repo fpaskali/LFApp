@@ -81,7 +81,7 @@ be installed automatically.
 remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```
 
-## Start App
+## Start Apps
 LFApp consist of four different shiny apps where there is a desktop and a 
 mobile version for each app. They can be started with one of the following 
 commands: 

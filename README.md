@@ -10,22 +10,22 @@ The repository includes the development version of R package LFApp
 The LFA shiny apps include in package LFApp consist of four modular Shiny 
 applications: 
 
-(1) *LFA App core* for image acquisition, editing, region of interest definition 
+(1) **LFA App core** for image acquisition, editing, region of interest definition 
 via gridding, background correction with multiple available methods, as well as 
 intensity data extraction of the pre-defined bands of the analysed LFAs. More
 precisely, it consists of Tab 1, Tab 2 and parts of Tab 3 described in detail 
 below.
 
-(2) *LFA App calibration* extends the LFA App core by methods for merging the
+(2) **LFA App calibration** extends the LFA App core by methods for merging the
 intensity data with information from experiments, computation of calibration 
 models and the generation of a report about the calibration analysis. The 
 functionality corresponds to the Tabs 1-6 described below.
 
-(3) *LFA App quantification* enables quantification of the extracted intensity 
+(3) **LFA App quantification** enables quantification of the extracted intensity 
 values via loading existing calibration models. It extends the LFA App core
 by Tab 7 described below.
 
-(4) *LFA App analysis* includes the full functionality mentioned above and 
+(4) **LFA App analysis** includes the full functionality mentioned above and 
 enables full analysis in one application. That is, it consists of Tab 1-7.
 
 

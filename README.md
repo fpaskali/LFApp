@@ -22,7 +22,7 @@ https://lfapp.shinyapps.io/mobile_app/
 The package requires Bioconductor package EBImage, which should be installed
 first via
 
-```{r, eval = FALSE}
+```{r}
 ## Install package BiocManager
 if(!requireNamespace("BiocManager", quietly = TRUE)) 
   install.packages("BiocManager")
@@ -44,7 +44,7 @@ remotes::install_github("RinteRface/shinyMobile")
 Finally, one can install package LFApp, where all remaining dependencies will
 be installed automatically.
 
-```{r, eval = FALSE}
+```{r}
 ## Install package LFApp
 remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```

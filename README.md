@@ -30,13 +30,21 @@ if(!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("EBImage", update = FALSE)
 ```
 
-Next, one can install package LFApp, where all remaining dependencies will
-be installed automatically.
+Our package depends on the most recent version of package shinyMobile, which 
+must be installed from github (https://github.com/RinteRface/shinyMobile) by
 
-```{r, eval = FALSE}
+```{r}
 ## Install package remotes
 if(!requireNamespace("remotes", quietly = TRUE)) 
   install.packages("remotes")
+## Install package shinyMobile
+remotes::install_github("RinteRface/shinyMobile")
+```
+
+Finally, one can install package LFApp, where all remaining dependencies will
+be installed automatically.
+
+```{r, eval = FALSE}
 ## Install package LFApp
 remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```

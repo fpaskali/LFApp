@@ -14,6 +14,8 @@ cal_server <- function( input, output, session ) {
   LOB <- NULL
   LOD <- NULL
   LOQ <- NULL
+  CalibrationData <- NULL
+  
   
   #checks upload for file input
   observe({

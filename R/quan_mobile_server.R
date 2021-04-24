@@ -7,6 +7,7 @@ quan_mobile_server <- function(input, output, session){
   IntensData <- NULL
   calFun <- NULL
   quanData <- NULL
+  predictData <- NULL
   
   # checks upload for file imput
   observe({

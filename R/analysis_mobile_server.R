@@ -16,6 +16,8 @@ analysis_mobile_server <- function(input, output, session){
   LOQ <- NULL
   calFun <- NULL
   quanData <- NULL
+  CalibrationData <- NULL
+  predictData <- NULL
   
   # checks upload for file imput
   observe({

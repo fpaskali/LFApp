@@ -15,6 +15,10 @@ analysis_server <- function( input, output, session ) {
   LOD <- NULL
   LOQ <- NULL
   calFun <- NULL
+  quanData <- NULL
+  CalibrationData <- NULL
+  predictData <- NULL
+  
   
   #checks upload for file input
   observe({

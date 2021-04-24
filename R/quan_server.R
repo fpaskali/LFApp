@@ -10,6 +10,7 @@ quan_server <- function( input, output, session ) {
   CalibrationData <- NULL
   calFun <- NULL
   quanData <- NULL
+  predictData <- NULL
   
   #checks upload for file input
   observe({

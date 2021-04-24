@@ -87,14 +87,19 @@ the upper bound of the one-sided 95\% confidence interval at concentration $0$.
 In case of LOD, the upper-bound of the 99.95\% confidence interval at 
 concentration $0$ is inverted. LOQ is determined as $3\times\textrm{LOD}$.
 ```{r}
-LOB <- fun(qt(0.95, df = y0$df)*y0$se.fit)
+if(resp[1] < resp[length(resp)]){
+  LOB <- fun(resp[1] + qt(0.95, df = y0$df)*y0$se.fit)
+  LOD <- fun(resp[1] + qt(0.9995, df = y0$df)*y0$se.fit)
+}else{
+  LOB <- fun(resp[1] - qt(0.95, df = y0$df)*y0$se.fit)
+  LOD <- fun(resp[1] - qt(0.9995, df = y0$df)*y0$se.fit)
+}
 names(LOB) <- "LOB"
-LOB
-LOD <- fun(qt(0.9995, df = y0$df)*y0$se.fit)
 names(LOD) <- "LOD"
-LOD
 LOQ <- 3*LOD
-names(LOB) <- "LOQ"
+names(LOQ) <- "LOQ"
+LOB
+LOD
 LOQ
 ```
 

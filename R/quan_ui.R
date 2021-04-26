@@ -123,7 +123,7 @@ quan_ui <- function(request) {
                                               width = NULL
                                  )
                                ),
-                               actionButton("threshold", label = "2) Apply Threshold"), br(),
+                               actionButton("threshold", label = "Apply Threshold"), br(),
                                hr(style="border-color: black"),
                                actionButton("data", label = "Add To Intensity Data"), br(),
                                hr(style="border-color: black"),

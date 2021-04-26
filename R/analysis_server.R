@@ -705,7 +705,7 @@ analysis_server <- function( input, output, session ) {
     output$calibration <- renderDT({
       datatable(DF)
     })
-    
+    updateSelectInput(session, "concVar", choices = names(DF))
     updateTabsetPanel(session, "tabs", selected = "tab5")
   })
   

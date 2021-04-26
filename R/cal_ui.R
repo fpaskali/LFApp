@@ -12,7 +12,7 @@ cal_ui <- function(request) {
                            sidebarLayout(
                              sidebarPanel(
                                radioButtons("upload",
-                                            label = ("1) Upload Image or Choose Sample"),
+                                            label = ("Upload Image or Choose Sample"),
                                             choices = list("Upload Image" = 1,
                                                            "Sample Image" = 2),
                                             selected = 1),
@@ -31,7 +31,7 @@ cal_ui <- function(request) {
                                ),
                                uiOutput("rotatePanel"),
                                hr(style="border-color: black"),
-                               h5("2) Set number of strips and number of lines per strip",
+                               h5("Set number of strips and number of lines per strip",
                                   style="font-weight:bold"),
                                sliderInput("strips", "Number of strips:",
                                            min = 1, max = 10, value = 1),
@@ -64,7 +64,7 @@ cal_ui <- function(request) {
                            sidebarLayout(
                              sidebarPanel(
                                numericInput(inputId = "selectStrip",
-                                            label = "1) Select strip:",
+                                            label = "Select strip:",
                                             value = 1,
                                             min = 1,
                                             max = 1,
@@ -72,7 +72,7 @@ cal_ui <- function(request) {
                                             width = NULL
                                ),
                                hr(style="border-color: black"),
-                               h5("2) Select threshold method and apply",
+                               h5("Select threshold method",
                                   style="font-weight:bold"),
                                radioButtons("colorImage",
                                             label = ("Color image?"),
@@ -123,13 +123,11 @@ cal_ui <- function(request) {
                                               width = NULL
                                  )
                                ),
-                               actionButton("threshold", label = "2) Apply Threshold"), br(),
+                               actionButton("threshold", label = "Apply Threshold"), br(),
                                hr(style="border-color: black"),
-                               h5("3) Add to Data and go back to 1) or proceed with 4)",
-                                  style="font-weight:bold"),
-                               actionButton("data", label = "3) Add To Data"), br(),
+                               actionButton("data", label = "Add To Intensity Data"), br(),
                                hr(style="border-color: black"),
-                               actionButton("showIntensData", label = "4) Switch To Intensity Data")
+                               actionButton("showIntensData", label = "Switch To Intensity Data")
                              ),
                              mainPanel(
                                HTML(
@@ -153,17 +151,16 @@ cal_ui <- function(request) {
                   tabPanel("Intensity Data", value = "tab3",
                            sidebarLayout(
                              sidebarPanel(
-                               h5("You can also upload existing intensity data and go to 3)", style="font-weight:bold"),
+                               h5("You can also upload existing intensity data and go to experiment info", style="font-weight:bold"),
                                fileInput("intensFile", "Select CSV file",
                                          multiple = FALSE,
                                          accept = c("text/csv",
                                                     "text/comma-separated-values,text/plain",
                                                     ".csv")), hr(style="border-color: black"),
                                h5("Download intensity data", style="font-weight:bold"),
-                               # actionButton("refreshData", label = "1) Refresh Data"), br(), br(),
-                               downloadButton("downloadData", "2) Download Data"), br(),
+                               downloadButton("downloadData", "Download Data"), br(),
                                hr(style="border-color: black"),
-                               actionButton("expInfo", label = "3) Switch To Experiment Info"),
+                               actionButton("expInfo", label = "Switch To Experiment Info"),
                                hr(style="border-color: black"),
                                h5("For restart with new data", style="font-weight:bold"),
                                actionButton("deleteData", label = "Delete Data"), br(),
@@ -176,7 +173,7 @@ cal_ui <- function(request) {
                   tabPanel("Experiment Info", value = "tab4",
                            sidebarLayout(
                              sidebarPanel(
-                               h5("1) Upload experiment info or upload existing merged data and go to 5)", style="font-weight:bold"),
+                               h5("Upload experiment info or upload existing merged data and go to calibration", style="font-weight:bold"),
                                fileInput("expFile", "Select CSV file",
                                          multiple = FALSE,
                                          accept = c("text/csv",
@@ -196,16 +193,16 @@ cal_ui <- function(request) {
                                                         "Double Quote" = '"',
                                                         "Single Quote" = "'"),
                                             selected = '"'),  hr(style="border-color: black"),
-                               h5("2) Select ID columns and merge datasets", style="font-weight:bold"),
+                               h5("Select ID columns and merge datasets", style="font-weight:bold"),
                                textInput("mergeIntens", label = "ID Column Intensity Data", value = "File"),
                                textInput("mergeExp", label = "ID Column Experiment Info", value = "File"),
-                               actionButton("merge", label = "2) Merge With Intensity Data"), br(),
+                               actionButton("merge", label = "Merge With Intensity Data"), br(),
                                hr(style="border-color: black"),
                                h5("Download merged data", style="font-weight:bold"),
                                # actionButton("refreshData2", label = "3) Refresh Data"), br(), br(),
-                               downloadButton("downloadData2", "4) Download Data"), br(),
+                               downloadButton("downloadData2", "Download Data"), br(),
                                hr(style="border-color: black"),
-                               actionButton("prepare", label = "5) Prepare Calibration"),
+                               actionButton("prepare", label = "Prepare Calibration"),
                                hr(style="border-color: black"),
                                h5("For restart with new data", style="font-weight:bold"),
                                actionButton("deleteData2", label = "Delete Data"), br(),

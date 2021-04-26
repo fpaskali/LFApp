@@ -877,6 +877,16 @@ analysis_server <- function( input, output, session ) {
       colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
                              paste0(input$analysisName, ".formula"), 
                              paste0(input$analysisName, ".", input$concVar, ".fit"))
+      if(SUBSET != ""){
+        subsetIndex <- function (x, subset){
+          e <- substitute(subset)
+          r <- eval(e, x, parent.frame())
+          r & !is.na(r)
+        }
+        Index <- eval(call("subsetIndex", x = CalibrationData, 
+                           subset = parse(text = SUBSET)))
+        modelDF[!Index,] <- NA
+      }
       DF <- cbind(CalibrationData, modelDF)
       CalibrationData <<- DF
       output$calibration <- renderDT({

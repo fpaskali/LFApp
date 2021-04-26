@@ -75,7 +75,7 @@ remotes::install_github("RinteRface/shinyMobile")
 ```
 
 For generating our vignette and automatic reports, we need packages knitr and
-remarkdown, which will be installed next.
+rmarkdown, which will be installed next.
 
 ```{r}
 ## Install package knitr

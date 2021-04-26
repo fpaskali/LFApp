@@ -16,6 +16,9 @@ analysis_mobile_server <- function(input, output, session){
   LOQ <- NULL
   calFun <- NULL
   quanData <- NULL
+  CalibrationData <- NULL
+  predFunc <- NULL
+  predictData <- NULL
   
   # checks upload for file imput
   observe({
@@ -932,14 +935,10 @@ analysis_mobile_server <- function(input, output, session){
       # Adding the analysis name and model formula to the table
       modelName <- rep(modelName, nrow(CalibrationData))
       modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      if (input$chosenModel == "Local polynomial model (loess)") {
-        modelDF <- cbind(modelName, modelFormula, fit$fitted)
-      } else {
-        modelDF <- cbind(modelName, modelFormula, fit$fitted.values)
-      }
+      modelDF <- cbind(modelName, modelFormula, predFunc(CalibrationData))
       colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
                              paste0(input$analysisName, ".formula"), 
-                             paste0(input$analysisName, ".fit"))
+                             paste0(input$analysisName, ".", input$concVar, ".fit"))
       DF <- cbind(CalibrationData, modelDF)
       CalibrationData <<- DF
       

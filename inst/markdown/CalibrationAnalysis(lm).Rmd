@@ -81,14 +81,19 @@ the upper bound of the one-sided 95\% confidence interval at concentration $0$.
 In case of LOD, the upper-bound of the 99.95\% confidence interval at 
 concentration $0$ is inverted. LOQ is determined as $3\times\textrm{LOD}$.
 ```{r}
-LOB <- (confint(fit, parm = 1, level = 0.90)[2]-ab[1])/ab[2]
+if(ab[2] > 0){
+  LOB <- (confint(fit, parm = 1, level = 0.90)[2]-ab[1])/ab[2]
+  LOD <- (confint(fit, parm = 1, level = 0.999)[2]-ab[1])/ab[2]
+}else{
+  LOB <- (confint(fit, parm = 1, level = 0.90)[1]-ab[1])/ab[2]
+  LOD <- (confint(fit, parm = 1, level = 0.999)[1]-ab[1])/ab[2]
+}
 names(LOB) <- "LOB"
-LOB
-LOD <- (confint(fit, parm = 1, level = 0.999)[2]-ab[1])/ab[2]
 names(LOD) <- "LOD"
-LOD
 LOQ <- 3*LOD
 names(LOQ) <- "LOQ"
+LOB
+LOD
 LOQ
 ```
 

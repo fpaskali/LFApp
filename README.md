@@ -135,3 +135,5 @@ vignette and can be opened via
 ```{r}
 vignette("LFApp")
 ```
+
+You can also find it at https://fpaskali.github.io/LFApp/

@@ -74,6 +74,18 @@ if(!requireNamespace("remotes", quietly = TRUE))
 remotes::install_github("RinteRface/shinyMobile")
 ```
 
+For generating our vignette and automatic reports, we need packages knitr and
+remarkdown, which will be installed next.
+
+```{r}
+## Install package knitr
+if(!requireNamespace("knitr", quietly = TRUE)) 
+  install.packages("knitr")
+## Install package rmarkdown
+if(!requireNamespace("rmarkdown", quietly = TRUE)) 
+  install.packages("rmarkdown")
+```
+
 Finally, one can install package LFApp, where all remaining dependencies will
 be installed automatically.
 

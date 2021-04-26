@@ -696,6 +696,7 @@ analysis_mobile_server <- function(input, output, session){
         error = function(e){stop(safeError(e))}
       )
       CalibrationData <<- DF
+      MergedData <<- DF
       output$calibration <- renderDT({
         datatable(DF)
       })

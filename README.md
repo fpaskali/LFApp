@@ -1,4 +1,4 @@
-# LFApp: Shiny Apps for Lateral Flow Assays
+# LFApp: Shiny Apps for Lateral Flow Assays ![LFAppCore](hex-LFApp.png)
 
 The repository includes the development version of R package LFApp
 

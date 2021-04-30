@@ -137,3 +137,8 @@ vignette("LFApp")
 ```
 
 You can also find it at https://fpaskali.github.io/LFApp/
+
+
+## YouTube Videos
+
+There is a playlist at https://www.youtube.com/playlist?list=PLRgOZXM8LZ0gJwtsFNxBiu9WJG1TJjFuP

@@ -27,7 +27,7 @@ BugReports: \tab https://github.com/fpaskali/LFApp/issues\cr
 }
 library(LFApp)
 }
-\author{ Filip Paskali, Wernoika Schary, Matthias Kohl
+\author{ Filip Paskali, Weronika Schary, Matthias Kohl
 
 Maintainer: Filip Paskali  \email{F.Paskali@hs-furtwangen.de}}
 %\references{

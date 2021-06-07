@@ -1,0 +1,13 @@
+name: LFAnalysis
+title: LFAnalysis
+username:
+account: lfapp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3992367
+bundleId: 4687761
+url: https://lfapp.shinyapps.io/LFAnalysis/
+when: 1623073763.2781
+lastSyncTime: 1623073763.27813
+asMultiple: FALSE
+asStatic: FALSE

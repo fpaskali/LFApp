@@ -479,6 +479,9 @@ app_server <- function( input, output, session ) {
   LOQ <- NULL
   calFun <- NULL
   predFun <- NULL
+  predictData <- NULL
+  
+  startAutosave <- reactiveVal(value=FALSE)
   
   #checks upload for file input
   observe({
@@ -1499,6 +1502,69 @@ app_server <- function( input, output, session ) {
       write.csv(predictData, file, row.names = FALSE)
     }
   )
+  
+  # Checking if workspace file exist
+  observe({
+    # TODO implement the functionality
+    if (file.exists("autosave.RData")) {
+      showModal(modalDialog(
+        title = "Old workspace backup found",
+        "Do you want to restore previous workspace?",
+        footer = tagList(
+          actionButton("no_restore", "No"),
+          actionButton("restore_work", "Yes")
+        )
+      ))
+    } else {
+      startAutosave(TRUE)
+    }
+  })
+  
+  observeEvent(input$no_restore, {
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  observeEvent(input$restore_work, {
+    load(file="autosave.RData")
+    
+    # Loading the image on the first plot
+    if (!is.null(shinyImageFile$shiny_img_final))
+      output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
+    
+    # Loading datatables
+    output$intens <- renderDT(datatable(IntensData))
+    output$experiment <- renderDT(datatable(ExpInfo))
+    output$calibration <- renderDT(datatable(MergedData))
+    output$quan <- renderDT(datatable(predictData))
+    
+    # Loading model in results tab
+    if (!is.null(fit) && !is.null(LOB) && !is.null(LOD) && !is.null(LOQ)) {
+      output$modelSummary <- renderPrint({ fit })
+      output$plot5 <- renderPlot({ modelPlot })
+      output$LOB <- renderText({ paste0("Limit of Blank (LOB): ", signif(LOB, 3)) })
+      output$LOD <- renderText({ paste0("Limit of Detection (LOD): ", signif(LOD, 3)) })
+      output$LOQ <- renderText({ paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3)) })
+    }
+    
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  # Autosaving every 3 minutes 
+  observe({
+    if (startAutosave()) {
+      invalidateLater(60000, session)
+      save(shinyImageFile, IntensData, ExpInfo, 
+           MergedData, fit, modelPlot, LOB, 
+           LOD, LOQ, calFun, predFun, predictData,
+           file="autosave.RData")
+      showNotification("Workspace saved", duration=2, type="message")
+    }
+  })
+  
+  # A function to remove the autosave file if the app was closed properly
+  onStop(function() file.remove("autosave.RData"))
 }
 
 shinyApp(app_ui, app_server)

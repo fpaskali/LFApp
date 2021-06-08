@@ -1528,6 +1528,18 @@ app_server <- function( input, output, session ) {
   observeEvent(input$restore_work, {
     load(file="autosave.RData")
     
+    # Loading the variables properly. Without this the variables are loaded in the observe scope only
+    shinyImageFile <<- shinyImageFile
+    IntensData <<- IntensData
+    ExpInfo <<- ExpInfo
+    MergedData <<- MergedData
+    predictData <<- predictData
+    fit <<- fit
+    modelPlot <<- modelPlot
+    LOB <<- LOB
+    LOD <<- LOD
+    LOQ <<- LOQ
+    
     # Loading the image on the first plot
     if (!is.null(shinyImageFile$shiny_img_final))
       output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
@@ -1551,7 +1563,7 @@ app_server <- function( input, output, session ) {
     removeModal()
   })
   
-  # Autosaving every 3 minutes 
+  # Autosaving every minute
   observe({
     if (startAutosave()) {
       invalidateLater(60000, session)

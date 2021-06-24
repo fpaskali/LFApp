@@ -714,16 +714,26 @@ analysis_mobile_server <- function(input, output, session){
   observe({recursiveMerge()})
   recursiveMerge <- eventReactive(input$merge,{
     isolate({
-      DF <- merge(ExpInfo, IntensData,
-                  by.x = input$mergeExp,
-                  by.y = input$mergeIntens, all = TRUE)
-      
-      MergedData <<- DF
-      CalibrationData <<- DF
-      
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
+      if (is.null(ExpInfo)) {
+        f7Toast(text="Experiment info not found.", position="top", session=session)
+      } else if (is.null(IntensData)) {
+        f7Toast(text="Intensity data not found.", position="top", session=session)
+      } else if (inherits(try(merge(ExpInfo, IntensData,
+                                    by.x = input$mergeExp,
+                                    by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
+        f7Toast(text="Error in the column IDs.", position="top", session=session)
+      } else {
+        DF <- merge(ExpInfo, IntensData,
+                    by.x = input$mergeExp,
+                    by.y = input$mergeIntens, all = TRUE)
+        
+        MergedData <<- DF
+        CalibrationData <<- DF
+        
+        output$experiment <- renderDT({
+          datatable(DF)
+        })
+      }
     })
   })
   

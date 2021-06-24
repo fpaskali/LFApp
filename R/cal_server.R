@@ -693,16 +693,26 @@ cal_server <- function( input, output, session ) {
   observe({recursiveMerge()})
   recursiveMerge <- eventReactive(input$merge,{
     isolate({
-      DF <- merge(ExpInfo, IntensData,
-                  by.x = input$mergeExp,
-                  by.y = input$mergeIntens, all = TRUE)
-      
-      MergedData <<- DF
-      CalibrationData <<- DF
-      
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
+      if (is.null(ExpInfo)) {
+        showNotification("Experiment info not found.", duration=3, type="error")
+      } else if (is.null(IntensData)) {
+        showNotification("Intensity data not found.", duration=3, type="error")
+      } else if (inherits(try(merge(ExpInfo, IntensData,
+                                    by.x = input$mergeExp,
+                                    by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
+        showNotification("Error in the column IDs.", duration=5, type="error")
+      } else {
+        DF <- merge(ExpInfo, IntensData,
+                    by.x = input$mergeExp,
+                    by.y = input$mergeIntens, all = TRUE)
+        
+        MergedData <<- DF
+        CalibrationData <<- DF
+        
+        output$experiment <- renderDT({
+          datatable(DF)
+        })
+      }
     })
   })
   

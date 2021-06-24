@@ -1,7 +1,7 @@
 cal_server <- function( input, output, session ) {
   ###### FIRST TAB
   
-  options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  options(shiny.maxRequestSize=100*1024^2) #file can be up to 50 mb; default is 5 mb
   ## initializations
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)

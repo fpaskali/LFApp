@@ -17,6 +17,7 @@ cal_server <- function( input, output, session ) {
   predFunc <- NULL
   CalibrationData <- NULL
   
+  startAutosave <- reactiveVal(value=FALSE)
   
   #checks upload for file input
   observe({

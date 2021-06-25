@@ -20,6 +20,8 @@ analysis_server <- function( input, output, session ) {
   predFunc <- NULL
   predictData <- NULL
   
+  startAutosave <- reactiveVal(value=FALSE)
+  
   #checks upload for file input
   observe({
     #default: upload image

@@ -10,6 +10,8 @@ core_server <- function( input, output, session ) {
   MergedData <- NULL
   CalibrationData <- NULL
   
+  startAutosave <- reactiveVal(value=FALSE)
+  
   #checks upload for file input
   observe({
     #default: upload image

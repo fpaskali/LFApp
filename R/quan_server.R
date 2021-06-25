@@ -12,6 +12,8 @@ quan_server <- function( input, output, session ) {
   quanData <- NULL
   predictData <- NULL
   
+  startAutosave <- reactiveVal(value=FALSE)
+  
   #checks upload for file input
   observe({
     #default: upload image

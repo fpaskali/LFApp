@@ -1111,7 +1111,7 @@ analysis_server <- function( input, output, session ) {
       save(shinyImageFile, IntensData, ExpInfo, 
            MergedData, fit, modelPlot, LOB, 
            LOD, LOQ, calFun, predFun, predictData,
-           file=file.path(fs::path_home(), "LFApp/ana_autosave.RData")
+           file=file.path(fs::path_home(), "LFApp/ana_autosave.RData"))
       showNotification("Workspace saved", duration=2, type="message")
     }
   })

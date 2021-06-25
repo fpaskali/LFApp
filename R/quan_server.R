@@ -560,7 +560,7 @@ quan_server <- function( input, output, session ) {
       
       # Save the workspace every time you add to intensity data
       save(shinyImageFile, IntensData, calFun, predFun, predictData,
-           file="quan_autosave.RData")
+           file=file.path(fs::path_home(), "LFApp/quan_autosave.RData"))
       showNotification("Workspace saved", duration=2, type="message")
     })
   })
@@ -700,7 +700,7 @@ quan_server <- function( input, output, session ) {
   
   # Checking if workspace file exist
   observe({
-    if (file.exists("quan_autosave.RData")) {
+    if (file.exists(file.path(fs::path_home(), "LFApp/quan_autosave.RData"))) {
       showModal(modalDialog(
         title = "Old workspace backup found",
         "Do you want to restore previous workspace?",
@@ -721,7 +721,7 @@ quan_server <- function( input, output, session ) {
   })
   
   observeEvent(input$restore_work, {
-    load(file="quan_autosave.RData")
+    load(file=file.path(fs::path_home(), "LFApp/quan_autosave.RData"))
     
     # Loading the variables properly. Without this the variables are loaded in the observe scope only
     shinyImageFile <<- shinyImageFile
@@ -745,11 +745,11 @@ quan_server <- function( input, output, session ) {
     if (startAutosave()) {
       invalidateLater(300000, session)
       save(shinyImageFile, IntensData, calFun, predFun, predictData,
-           file="quan_autosave.RData")
+           file=file.path(fs::path_home(), "LFApp/quan_autosave.RData"))
       showNotification("Workspace saved", duration=2, type="message")
     }
   })
   
   # A function to remove the autosave file if the app was closed properly
-  onStop(function() file.remove("quan_autosave.RData"))
+  onStop(function() file.remove(file.path(fs::path_home(), "LFApp/quan_autosave.RData")))
 }

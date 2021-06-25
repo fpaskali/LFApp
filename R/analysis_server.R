@@ -563,6 +563,13 @@ analysis_server <- function( input, output, session ) {
         shinyImageFile$Mean_Intensities <- NULL
       if(!is.null(shinyImageFile$Median_Intensities))
         shinyImageFile$Median_Intensities <- NULL
+      
+      # Save the workspace
+      save(shinyImageFile, IntensData, ExpInfo, 
+           MergedData, fit, modelPlot, LOB, 
+           LOD, LOQ, calFun, predFun, predictData,
+           file=file.path(fs::path_home(), "LFApp/ana_autosave.RData"))
+      showNotification("Workspace saved", duration=2, type="message")
     })
   })
   
@@ -1037,4 +1044,78 @@ analysis_server <- function( input, output, session ) {
       write.csv(predictData, file, row.names = FALSE)
     }
   )
+  
+  # Checking if workspace file exist
+  observe({
+    if (file.exists(file.path(fs::path_home(), "LFApp/ana_autosave.RData"))) {
+      showModal(modalDialog(
+        title = "Old workspace backup found",
+        "Do you want to restore previous workspace?",
+        h6("If you do not restore the old workspace, it will be overwritten!"),
+        footer = tagList(
+          actionButton("no_restore", "No"),
+          actionButton("restore_work", "Yes")
+        )
+      ))
+    } else {
+      startAutosave(TRUE)
+    }
+  })
+  
+  observeEvent(input$no_restore, {
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  observeEvent(input$restore_work, {
+    load(file=file.path(fs::path_home(), "LFApp/ana_autosave.RData"))
+    
+    # Loading the variables properly. Without this the variables are loaded in the observe scope only
+    shinyImageFile <<- shinyImageFile
+    IntensData <<- IntensData
+    ExpInfo <<- ExpInfo
+    MergedData <<- MergedData
+    predictData <<- predictData
+    fit <<- fit
+    modelPlot <<- modelPlot
+    LOB <<- LOB
+    LOD <<- LOD
+    LOQ <<- LOQ
+    
+    # Loading the image on the first plot
+    if (!is.null(shinyImageFile$shiny_img_final))
+      output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
+    
+    # Loading datatables
+    output$intens <- renderDT(datatable(IntensData))
+    output$experiment <- renderDT(datatable(ExpInfo))
+    output$calibration <- renderDT(datatable(MergedData))
+    output$quan <- renderDT(datatable(predictData))
+    
+    # Loading model in results tab
+    if (!is.null(fit) && !is.null(LOB) && !is.null(LOD) && !is.null(LOQ)) {
+      output$modelSummary <- renderPrint({ fit })
+      output$plot5 <- renderPlot({ modelPlot })
+      output$LOB <- renderText({ paste0("Limit of Blank (LOB): ", signif(LOB, 3)) })
+      output$LOD <- renderText({ paste0("Limit of Detection (LOD): ", signif(LOD, 3)) })
+      output$LOQ <- renderText({ paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3)) })
+    }
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  # Autosaving every minute
+  observe({
+    if (startAutosave()) {
+      invalidateLater(300000, session)
+      save(shinyImageFile, IntensData, ExpInfo, 
+           MergedData, fit, modelPlot, LOB, 
+           LOD, LOQ, calFun, predFun, predictData,
+           file=file.path(fs::path_home(), "LFApp/ana_autosave.RData")
+      showNotification("Workspace saved", duration=2, type="message")
+    }
+  })
+  
+  # A function to remove the autosave file if the app was closed properly
+  onStop(function() file.remove(file.path(fs::path_home(), "LFApp/analysis_autosave.RData")))
 }

@@ -254,6 +254,11 @@ core_server <- function( input, output, session ) {
       } else {
         showNotification("Error: The grid is out of bounds", duration = 5, type="error")
       }
+      
+      # Save the workspace every time you add to intensity data
+      save(shinyImageFile, IntensData,
+           file=file.path(fs::path_home(), "LFApp/core_autosave.RData"))
+      showNotification("Workspace saved", duration=2, type="message")
     })
   })
   
@@ -646,4 +651,57 @@ core_server <- function( input, output, session ) {
       stopApp()
     })
   })
+  
+  # Checking if workspace file exist
+  observe({
+    if (file.exists(file.path(fs::path_home(), "LFApp/core_autosave.RData"))) {
+      showModal(modalDialog(
+        title = "Old workspace backup found",
+        "Do you want to restore previous workspace?",
+        h6("If you do not restore the old workspace, it will be overwritten!"),
+        footer = tagList(
+          actionButton("no_restore", "No"),
+          actionButton("restore_work", "Yes")
+        )
+      ))
+    } else {
+      startAutosave(TRUE)
+    }
+  })
+  
+  observeEvent(input$no_restore, {
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  observeEvent(input$restore_work, {
+    load(file=file.path(fs::path_home(), "LFApp/core_autosave.RData"))
+    
+    # Loading the variables properly. Without this the variables are loaded in the observe scope only
+    shinyImageFile <<- shinyImageFile
+    IntensData <<- IntensData
+    
+    # Loading the image on the first plot
+    if (!is.null(shinyImageFile$shiny_img_final))
+      output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
+    
+    # Loading datatables
+    output$intens <- renderDT(datatable(IntensData))
+    
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  # Autosaving every minute
+  observe({
+    if (startAutosave()) {
+      invalidateLater(300000, session)
+      save(shinyImageFile, IntensData,
+           file=file.path(fs::path_home(), "LFApp/core_autosave.RData"))
+      showNotification("Workspace saved", duration=2, type="message")
+    }
+  })
+  
+  # A function to remove the autosave file if the app was closed properly
+  onStop(function() file.remove(file.path(fs::path_home(), "LFApp/core_autosave.RData")))
 }

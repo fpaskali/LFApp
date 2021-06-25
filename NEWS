@@ -6,3 +6,9 @@
 ## Version 1.0
 ###########################################################
 - First release of the package
+
+###########################################################
+## Version 1.1
+###########################################################
+- Bug fixes
+- Added autosave feature to restore the workspace after crash

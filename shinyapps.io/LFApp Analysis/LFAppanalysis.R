@@ -1025,6 +1025,13 @@ app_server <- function( input, output, session ) {
         shinyImageFile$Mean_Intensities <- NULL
       if(!is.null(shinyImageFile$Median_Intensities))
         shinyImageFile$Median_Intensities <- NULL
+      
+      # Save the workspace everytime you add to intensity data
+      save(shinyImageFile, IntensData, ExpInfo, 
+           MergedData, fit, modelPlot, LOB, 
+           LOD, LOQ, calFun, predFun, predictData,
+           file="autosave.RData")
+      showNotification("Workspace saved", duration=2, type="message")
     })
   })
   
@@ -1090,21 +1097,6 @@ app_server <- function( input, output, session ) {
       })
     })
   })
-  observeEvent(input$intensFile,{
-    output$intens <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-  })
-  observeEvent(input$expFile,{
-    output$experiment <- renderDT({})
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
-  observeEvent(input$prepFile,{
-    output$calibration <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-    suppressWarnings(rm(ExpInfo, pos = 1))
-    suppressWarnings(rm(MergedData, pos = 1))
-  })
   
   observe({recursiveExpInfo()})
   
@@ -1168,16 +1160,26 @@ app_server <- function( input, output, session ) {
   observe({recursiveMerge()})
   recursiveMerge <- eventReactive(input$merge,{
     isolate({
-      DF <- merge(ExpInfo, IntensData,
-                  by.x = input$mergeExp,
-                  by.y = input$mergeIntens, all = TRUE)
-      
-      MergedData <<- DF
-      CalibrationData <<- DF
-      
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
+      if (is.null(ExpInfo)) {
+        showNotification("Experiment info not found.", duration=3, type="error")
+      } else if (is.null(IntensData)) {
+        showNotification("Intensity data not found.", duration=3, type="error")
+      } else if (inherits(try(merge(ExpInfo, IntensData,
+                             by.x = input$mergeExp,
+                             by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
+        showNotification("Error in the column IDs.", duration = 5, type="error")
+      } else {
+        DF <- merge(ExpInfo, IntensData,
+                    by.x = input$mergeExp,
+                    by.y = input$mergeIntens, all = TRUE)
+        
+        MergedData <<- DF
+        CalibrationData <<- DF
+        
+        output$experiment <- renderDT({
+          datatable(DF)
+        })
+      }
     })
   })
   
@@ -1417,10 +1419,6 @@ app_server <- function( input, output, session ) {
     if(!is.null(shinyImageFile$Threshold))
       paste0("Median intensities: ", paste0(signif(shinyImageFile$Median_Intensities, 4), collapse = ", "))
   })
-  output$intens <- renderDT({
-    DF <- IntensData
-    datatable(DF)
-  })
   output$folder <- renderPrint({
     paste0("Folder for Results: ", parseDirPath(c(wd=fs::path_home()), input$folder))
   })
@@ -1505,11 +1503,11 @@ app_server <- function( input, output, session ) {
   
   # Checking if workspace file exist
   observe({
-    # TODO implement the functionality
     if (file.exists("autosave.RData")) {
       showModal(modalDialog(
         title = "Old workspace backup found",
         "Do you want to restore previous workspace?",
+        h6("If you do not restore the old workspace, it will be overwritten!"),
         footer = tagList(
           actionButton("no_restore", "No"),
           actionButton("restore_work", "Yes")
@@ -1558,7 +1556,6 @@ app_server <- function( input, output, session ) {
       output$LOD <- renderText({ paste0("Limit of Detection (LOD): ", signif(LOD, 3)) })
       output$LOQ <- renderText({ paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3)) })
     }
-    
     startAutosave(TRUE)
     removeModal()
   })

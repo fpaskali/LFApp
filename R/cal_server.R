@@ -507,71 +507,73 @@ cal_server <- function( input, output, session ) {
   
   recursiveData <- eventReactive(input$data,{
     isolate({
-      AM <- shinyImageFile$Mean_Intensities
-      colnames(AM) <- paste0("Mean", 1:input$bands)
-      Med <- shinyImageFile$Median_Intensities
-      colnames(Med) <- paste0("Median", 1:input$bands)
-      # TODO Here else if will improve the app.
-      if(input$thresh == 1){
-        BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")
+      if (!is.null(shinyImageFile$Threshold)) {
+        AM <- shinyImageFile$Mean_Intensities
+        colnames(AM) <- paste0("Mean", 1:input$bands)
+        Med <- shinyImageFile$Median_Intensities
+        colnames(Med) <- paste0("Median", 1:input$bands)
+        # TODO Here else if will improve the app.
+        if(input$thresh == 1){
+          BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")
+        }
+        if(input$thresh == 2){
+          BG.method <- matrix(c("quantile", NA, input$quantile1),
+                              nrow = 1, ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")
+        }
+        if(input$thresh == 3){
+          BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")        
+        }
+        if(input$thresh == 4){
+          BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")        
+        }
+        seg.list <- shinyImageFile$segmentation_list
+        img <- seg.list[[1]][[1]]
+        if(colorMode(img) > 0){
+          MODE <- input$channel
+          DF <- data.frame("File" = shinyImageFile$filename,
+                           "Mode" = MODE,
+                           "Strip" = input$selectStrip,
+                           BG.method, AM, Med,
+                           check.names = FALSE)
+        }else{
+          DF <- data.frame("File" = shinyImageFile$filename,
+                           "Mode" = NA,
+                           "Strip" = input$selectStrip,
+                           BG.method, AM, Med,
+                           check.names = FALSE)
+        }
+        if(inherits(try(IntensData, silent = TRUE), "try-error"))
+          IntensData <<- DF
+        else
+          IntensData <<- rbind(IntensData, DF)
+        
+        output$intens <- renderDT({
+          DF <- IntensData
+          datatable(DF)
+        })
+        output$plot3 <- NULL
+        output$plot4 <- NULL
+        if(!is.null(shinyImageFile$Threshold))
+          shinyImageFile$Threshold <- NULL
+        if(!is.null(shinyImageFile$Mean_Intensities))
+          shinyImageFile$Mean_Intensities <- NULL
+        if(!is.null(shinyImageFile$Median_Intensities))
+          shinyImageFile$Median_Intensities <- NULL
+        
+        # Save the workspace every time you add to intensity data
+        save(shinyImageFile, IntensData, 
+             ExpInfo, MergedData, fit, 
+             modelPlot, LOB, LOD, LOQ,
+             file=file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData"))
+        showNotification("Workspace saved", duration=2, type="message")
       }
-      if(input$thresh == 2){
-        BG.method <- matrix(c("quantile", NA, input$quantile1),
-                            nrow = 1, ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")
-      }
-      if(input$thresh == 3){
-        BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")        
-      }
-      if(input$thresh == 4){
-        BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")        
-      }
-      seg.list <- shinyImageFile$segmentation_list
-      img <- seg.list[[1]][[1]]
-      if(colorMode(img) > 0){
-        MODE <- input$channel
-        DF <- data.frame("File" = shinyImageFile$filename,
-                         "Mode" = MODE,
-                         "Strip" = input$selectStrip,
-                         BG.method, AM, Med,
-                         check.names = FALSE)
-      }else{
-        DF <- data.frame("File" = shinyImageFile$filename,
-                         "Mode" = NA,
-                         "Strip" = input$selectStrip,
-                         BG.method, AM, Med,
-                         check.names = FALSE)
-      }
-      if(inherits(try(IntensData, silent = TRUE), "try-error"))
-        IntensData <<- DF
-      else
-        IntensData <<- rbind(IntensData, DF)
-      
-      output$intens <- renderDT({
-        DF <- IntensData
-        datatable(DF)
-      })
-      output$plot3 <- NULL
-      output$plot4 <- NULL
-      if(!is.null(shinyImageFile$Threshold))
-        shinyImageFile$Threshold <- NULL
-      if(!is.null(shinyImageFile$Mean_Intensities))
-        shinyImageFile$Mean_Intensities <- NULL
-      if(!is.null(shinyImageFile$Median_Intensities))
-        shinyImageFile$Median_Intensities <- NULL
-      
-      # Save the workspace every time you add to intensity data
-      save(shinyImageFile, IntensData, 
-           ExpInfo, MergedData, fit, 
-           modelPlot, LOB, LOD, LOQ,
-           file=file.path(fs::path_home(), "LFApp/cal_autosave.RData"))
-      showNotification("Workspace saved", duration=2, type="message")
     })
   })
   
@@ -1006,7 +1008,7 @@ cal_server <- function( input, output, session ) {
   
   # Checking if workspace file exist
   observe({
-    if (file.exists(file.path(fs::path_home(), "LFApp/cal_autosave.RData"))) {
+    if (file.exists(file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData"))) {
       showModal(modalDialog(
         title = "Old workspace backup found",
         "Do you want to restore previous workspace?",
@@ -1027,7 +1029,7 @@ cal_server <- function( input, output, session ) {
   })
   
   observeEvent(input$restore_work, {
-    load(file=file.path(fs::path_home(), "LFApp/cal_autosave.RData"))
+    load(file=file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData"))
     
     # Loading the variables properly. Without this the variables are loaded in the observe scope only
     shinyImageFile <<- shinyImageFile
@@ -1065,14 +1067,15 @@ cal_server <- function( input, output, session ) {
   observe({
     if (startAutosave()) {
       invalidateLater(300000, session)
+      if (!file.exists(file.path(fs::path_home(), "Documents/LFApp"))) dir.create(file.path(fs::path_home(), "Documents/LFApp"))
       save(shinyImageFile, IntensData, 
            ExpInfo, MergedData, fit, 
            modelPlot, LOB, LOD, LOQ,
-           file=file.path(fs::path_home(), "LFApp/cal_autosave.RData"))
+           file=file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData"))
       showNotification("Workspace saved", duration=2, type="message")
     }
   })
   
   # A function to remove the autosave file if the app was closed properly
-  onStop(function() file.remove(file.path(fs::path_home(), "LFApp/cal_autosave.RData")))
+  # onStop(function() file.remove(file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData")))
 }

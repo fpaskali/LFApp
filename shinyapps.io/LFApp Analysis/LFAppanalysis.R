@@ -478,7 +478,7 @@ app_server <- function( input, output, session ) {
   LOD <- NULL
   LOQ <- NULL
   calFun <- NULL
-  predFun <- NULL
+  predFunc <- NULL
   predictData <- NULL
   
   startAutosave <- reactiveVal(value=FALSE)
@@ -968,70 +968,72 @@ app_server <- function( input, output, session ) {
   
   recursiveData <- eventReactive(input$data,{
     isolate({
-      AM <- shinyImageFile$Mean_Intensities
-      colnames(AM) <- paste0("Mean", 1:input$bands)
-      Med <- shinyImageFile$Median_Intensities
-      colnames(Med) <- paste0("Median", 1:input$bands)
-      if(input$thresh == 1){
-        BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")
+      if (!is.null(shinyImageFile$Threshold)) {
+        AM <- shinyImageFile$Mean_Intensities
+        colnames(AM) <- paste0("Mean", 1:input$bands)
+        Med <- shinyImageFile$Median_Intensities
+        colnames(Med) <- paste0("Median", 1:input$bands)
+        if(input$thresh == 1){
+          BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")
+        }
+        if(input$thresh == 2){
+          BG.method <- matrix(c("quantile", NA, input$quantile1),
+                              nrow = 1, ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")
+        }
+        if(input$thresh == 3){
+          BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")        
+        }
+        if(input$thresh == 4){
+          BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")        
+        }
+        seg.list <- shinyImageFile$segmentation_list
+        img <- seg.list[[1]][[1]]
+        if(colorMode(img) > 0){
+          MODE <- input$channel
+          DF <- data.frame("File" = shinyImageFile$filename,
+                           "Mode" = MODE,
+                           "Strip" = input$selectStrip,
+                           BG.method, AM, Med,
+                           check.names = FALSE)
+        }else{
+          DF <- data.frame("File" = shinyImageFile$filename,
+                           "Mode" = NA,
+                           "Strip" = input$selectStrip,
+                           BG.method, AM, Med,
+                           check.names = FALSE)
+        }
+        if(inherits(try(IntensData, silent = TRUE), "try-error"))
+          IntensData <<- DF
+        else
+          IntensData <<- rbind(IntensData, DF)
+        
+        output$intens <- renderDT({
+          DF <- IntensData
+          datatable(DF)
+        })
+        output$plot3 <- NULL
+        output$plot4 <- NULL
+        if(!is.null(shinyImageFile$Threshold))
+          shinyImageFile$Threshold <- NULL
+        if(!is.null(shinyImageFile$Mean_Intensities))
+          shinyImageFile$Mean_Intensities <- NULL
+        if(!is.null(shinyImageFile$Median_Intensities))
+          shinyImageFile$Median_Intensities <- NULL
+        
+        # Save the workspace everytime you add to intensity data
+        save(shinyImageFile, IntensData, ExpInfo, 
+             MergedData, fit, modelPlot, LOB, 
+             LOD, LOQ, calFun, predFunc, predictData,
+             file="autosave.RData")
+        showNotification("Workspace saved", duration=2, type="message")
       }
-      if(input$thresh == 2){
-        BG.method <- matrix(c("quantile", NA, input$quantile1),
-                            nrow = 1, ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")
-      }
-      if(input$thresh == 3){
-        BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")        
-      }
-      if(input$thresh == 4){
-        BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")        
-      }
-      seg.list <- shinyImageFile$segmentation_list
-      img <- seg.list[[1]][[1]]
-      if(colorMode(img) > 0){
-        MODE <- input$channel
-        DF <- data.frame("File" = shinyImageFile$filename,
-                         "Mode" = MODE,
-                         "Strip" = input$selectStrip,
-                         BG.method, AM, Med,
-                         check.names = FALSE)
-      }else{
-        DF <- data.frame("File" = shinyImageFile$filename,
-                         "Mode" = NA,
-                         "Strip" = input$selectStrip,
-                         BG.method, AM, Med,
-                         check.names = FALSE)
-      }
-      if(inherits(try(IntensData, silent = TRUE), "try-error"))
-        IntensData <<- DF
-      else
-        IntensData <<- rbind(IntensData, DF)
-      
-      output$intens <- renderDT({
-        DF <- IntensData
-        datatable(DF)
-      })
-      output$plot3 <- NULL
-      output$plot4 <- NULL
-      if(!is.null(shinyImageFile$Threshold))
-        shinyImageFile$Threshold <- NULL
-      if(!is.null(shinyImageFile$Mean_Intensities))
-        shinyImageFile$Mean_Intensities <- NULL
-      if(!is.null(shinyImageFile$Median_Intensities))
-        shinyImageFile$Median_Intensities <- NULL
-      
-      # Save the workspace everytime you add to intensity data
-      save(shinyImageFile, IntensData, ExpInfo, 
-           MergedData, fit, modelPlot, LOB, 
-           LOD, LOQ, calFun, predFun, predictData,
-           file="autosave.RData")
-      showNotification("Workspace saved", duration=2, type="message")
     })
   })
   
@@ -1566,14 +1568,14 @@ app_server <- function( input, output, session ) {
       invalidateLater(60000, session)
       save(shinyImageFile, IntensData, ExpInfo, 
            MergedData, fit, modelPlot, LOB, 
-           LOD, LOQ, calFun, predFun, predictData,
+           LOD, LOQ, calFun, predFunc, predictData,
            file="autosave.RData")
       showNotification("Workspace saved", duration=2, type="message")
     }
   })
   
   # A function to remove the autosave file if the app was closed properly
-  onStop(function() file.remove("autosave.RData"))
+  # onStop(function() file.remove("autosave.RData"))
 }
 
 shinyApp(app_ui, app_server)

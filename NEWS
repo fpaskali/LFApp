@@ -12,3 +12,8 @@
 ###########################################################
 - Bug fixes
 - Added autosave feature to restore the workspace after crash
+
+###########################################################
+## Version 1.2
+###########################################################
+- minor corrections requested during CRAN submission

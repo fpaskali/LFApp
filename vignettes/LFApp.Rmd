@@ -47,7 +47,7 @@ also be carried out individually.
 
 # Testing our apps without installing
 
-Before installing our package, one can also test our apps on https://shinyapps.io. 
+Before installing our package, one can also test our apps on https://www.shinyapps.io. 
 The desktop version of our full purpose analysis app is at
 
 https://lfapp.shinyapps.io/LFAnalysis/

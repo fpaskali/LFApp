@@ -16,8 +16,8 @@ and applied to intensity data from new images for determining concentrations.
 \tabular{ll}{
 Package: \tab LFApp\cr
 Type: \tab Package\cr
-Version: \tab 1.2\cr
-Date: \tab 2021-07-26\cr
+Version: \tab 1.3\cr
+Date: \tab 2021-07-27\cr
 Depends: \tab R(>= 4.0.0)\cr
 Imports: \tab stats, utils, graphics, methods, mgcv, shiny, shinyjs, shinythemes, shinyFiles, shinyMobile (>= 0.9), EBImage, DT, ggplot2, fs\cr
 Suggests: \tab knitr, rmarkdown, remotes\cr

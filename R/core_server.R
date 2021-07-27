@@ -1,6 +1,10 @@
 core_server <- function( input, output, session ) {
   # Cropping and segmentation tab ----------------------------------------------
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
   
+  oldopt <- options()
+  on.exit(options(oldopt))
   options(shiny.maxRequestSize=100*1024^2) #file can be up to 50 mb; default is 5 mb
   ## initialization
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,

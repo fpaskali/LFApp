@@ -567,9 +567,9 @@ quan_server <- function( input, output, session ) {
         
         
         # Save the workspace every time you add to intensity data
-        save(shinyImageFile, IntensData, calFun, predFunc, predictData,
-             file=file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData"))
-        showNotification("Workspace saved", duration=2, type="message")
+        # save(shinyImageFile, IntensData, calFun, predFunc, predictData,
+        #      file=file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData"))
+        # showNotification("Workspace saved", duration=2, type="message")
       }
     })
   })

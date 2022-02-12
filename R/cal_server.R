@@ -572,11 +572,11 @@ cal_server <- function( input, output, session ) {
           shinyImageFile$Median_Intensities <- NULL
         
         # Save the workspace every time you add to intensity data
-        save(shinyImageFile, IntensData, 
-             ExpInfo, MergedData, fit, 
-             modelPlot, LOB, LOD, LOQ,
-             file=file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData"))
-        showNotification("Workspace saved", duration=2, type="message")
+        # save(shinyImageFile, IntensData, 
+        #      ExpInfo, MergedData, fit, 
+        #      modelPlot, LOB, LOD, LOQ,
+        #      file=file.path(fs::path_home(), "Documents/LFApp/cal_autosave.RData"))
+        # showNotification("Workspace saved", duration=2, type="message")
       }
     })
   })

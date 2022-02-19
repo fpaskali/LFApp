@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(paste0(PATH.OUT, "/", FILENAME, "_Data.RData"))
+load(file.path(PATH.OUT,paste0(FILENAME, "_Data.RData")))
 tmp <- strsplit(FORMULA, "~")[[1]]
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
@@ -107,7 +107,7 @@ LOQ
 
 We save the results.
 ```{r}
-save(fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/", FILENAME, "_Results.RData"))
+save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.RData")))
 ```
 
 # Save Model
@@ -115,7 +115,7 @@ save(fit, LOB, LOD, LOQ, file = paste0(PATH.OUT, "/", FILENAME, "_Results.RData"
 We save the inverse of the fitted model to be able to apply it for predicting
 concentrations.
 ```{r}
-saveRDS(object = predFunc, file = paste0(PATH.OUT, "/", FILENAME, "_Model.rds"))
+saveRDS(object = predFunc, file = file.path(PATH.OUT, paste0(FILENAME, "_Model.rds")))
 ```
 
 # Software

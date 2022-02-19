@@ -920,25 +920,23 @@ analysis_mobile_server <- function(input, output, session){
       FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
       
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-           file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
+           file = file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
       if (input$chosenModel == "Linear model (lm)") {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
+                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
       } else if (input$chosenModel == "Local polynomial model (loess)") {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(loess).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
+                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
       } else if (input$chosenModel == "Generalized additive model (gam)") {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
+                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
       }
       
-      rmarkdown::render(input = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"),
-                        output_file = paste0(PATH.OUT, "/", FILENAME, "_Analysis.html"))
-      
-      # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
+      rmarkdown::render(input = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")),
+                        output_file = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.html")))
       
       output$modelSummary <- renderPrint({ fit })
       
@@ -999,7 +997,7 @@ analysis_mobile_server <- function(input, output, session){
   
   recursiveOpenReport <- eventReactive(input$openReport,{
     isolate({
-      browseURL(paste0(input$folder, "/", FILENAME, "_Analysis.html"),
+      browseURL(file.path(input$folder, paste0(FILENAME, "_Analysis.html")),
                 browser = getOption("browser"))
     })
   })

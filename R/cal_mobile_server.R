@@ -1,7 +1,11 @@
 cal_mobile_server <- function(input, output, session){
   ########## FIRST TAB
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
   
-  options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  oldopt <- options()
+  on.exit(options(oldopt))
+  options(shiny.maxRequestSize=100*1024^2) #file can be up to 50 mb; default is 5 mb
   ## initializations
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL, 
                                    shiny_img_final = NULL, Threshold = NULL)
@@ -216,27 +220,35 @@ cal_mobile_server <- function(input, output, session){
   recursiveSegmentation <- eventReactive(input$segmentation,{
     isolate({
       p <- input$plot_brush
-      MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
-      colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
-      rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
-      
-      segmentation.list <- vector("list", length = input$strips)
-      count <- 0
-      for(i in 1:input$strips){
-        tmp.list <- vector("list", length = 2*input$bands-1)
-        for(j in 1:(2*input$bands-1)){
-          img <- shinyImageFile$shiny_img_final
-          if(length(dim(img)) == 2)
-            img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
-          else if(length(dim(img)) == 3)
-            img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
-          tmp.list[[j]] <- img
+      # Check if the region of interest is out of the bounds
+      if (p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1] &&
+          p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2] &&
+          p$xmin >= 0 &&
+          p$ymin >= 0) {
+        MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
+        colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
+        rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
+        
+        segmentation.list <- vector("list", length = input$strips)
+        count <- 0
+        for(i in 1:input$strips){
+          tmp.list <- vector("list", length = 2*input$bands-1)
+          for(j in 1:(2*input$bands-1)){
+            img <- shinyImageFile$shiny_img_final
+            if(length(dim(img)) == 2)
+              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
+            else if(length(dim(img)) == 3)
+              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
+            tmp.list[[j]] <- img
+          }
+          segmentation.list[[i]] <- tmp.list
         }
-        segmentation.list[[i]] <- tmp.list
+        shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
+        shinyImageFile$segmentation_list <- segmentation.list
+        updateF7Tabs(session=session, id="tabs", selected = "Background")
+      } else {
+        f7Toast(text="Error: The grid is out of bounds", position="bottom", session=session)
       }
-      shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
-      shinyImageFile$segmentation_list <- segmentation.list
-      updateF7Tabs(session=session, id="tabs", selected = "Background")
     })
   })
   
@@ -694,6 +706,7 @@ cal_mobile_server <- function(input, output, session){
         error = function(e){stop(safeError(e))}
       )
       CalibrationData <<- DF
+      MergedData <<- DF
       output$calibration <- renderDT({
         datatable(DF)
       })
@@ -704,16 +717,26 @@ cal_mobile_server <- function(input, output, session){
   observe({recursiveMerge()})
   recursiveMerge <- eventReactive(input$merge,{
     isolate({
-      DF <- merge(ExpInfo, IntensData,
-                  by.x = input$mergeExp,
-                  by.y = input$mergeIntens, all = TRUE)
-      
-      MergedData <<- DF
-      CalibrationData <<- DF
-      
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
+      if (is.null(ExpInfo)) {
+        f7Toast(text="Experiment info not found.", position="top", session=session)
+      } else if (is.null(IntensData)) {
+        f7Toast(text="Intensity data not found.", position="top", session=session)
+      } else if (inherits(try(merge(ExpInfo, IntensData,
+                                    by.x = input$mergeExp,
+                                    by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
+        f7Toast(text="Error in the column IDs.", position="top", session=session)
+      } else {
+        DF <- merge(ExpInfo, IntensData,
+                    by.x = input$mergeExp,
+                    by.y = input$mergeIntens, all = TRUE)
+        
+        MergedData <<- DF
+        CalibrationData <<- DF
+        
+        output$experiment <- renderDT({
+          datatable(DF)
+        })
+      }
     })
   })
   
@@ -897,25 +920,23 @@ cal_mobile_server <- function(input, output, session){
       FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
       
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-           file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
+           file = file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
       if (input$chosenModel == "Linear model (lm)") {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
+                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
       } else if (input$chosenModel == "Local polynomial model (loess)") {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(loess).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
+                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
       } else if (input$chosenModel == "Generalized additive model (gam)") {
         file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
                                      package = "LFApp"),
-                  to = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"))
+                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
       }
       
-      rmarkdown::render(input = paste0(PATH.OUT, "/", FILENAME, "_Analysis.Rmd"),
-                        output_file = paste0(PATH.OUT, "/", FILENAME, "_Analysis.html"))
-      
-      # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
+      rmarkdown::render(input = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")),
+                        output_file = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.html")))
       
       output$modelSummary <- renderPrint({ fit })
       
@@ -939,6 +960,16 @@ cal_mobile_server <- function(input, output, session){
       colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
                              paste0(input$analysisName, ".formula"), 
                              paste0(input$analysisName, ".", input$concVar, ".fit"))
+      if(SUBSET != ""){
+        subsetIndex <- function (x, subset){
+          e <- substitute(subset)
+          r <- eval(e, x, parent.frame())
+          r & !is.na(r)
+        }
+        Index <- eval(call("subsetIndex", x = CalibrationData, 
+                           subset = parse(text = SUBSET)))
+        modelDF[!Index,] <- NA
+      }
       DF <- cbind(CalibrationData, modelDF)
       CalibrationData <<- DF
       output$calibration <- renderDT({
@@ -966,7 +997,7 @@ cal_mobile_server <- function(input, output, session){
   
   recursiveOpenReport <- eventReactive(input$openReport,{
     isolate({
-      browseURL(paste0(input$folder, "/", FILENAME, "_Analysis.html"),
+      browseURL(file.path(input$folder, paste0(FILENAME, "_Analysis.html")),
                 browser = getOption("browser"))
     })
   })

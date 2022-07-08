@@ -24,12 +24,14 @@ run_mobile_quan()
 \details{
   The functions start the various shiny apps included in the package.
 }
+\value{
+  An object that represents the app. Printing the object will run the app.
+}
 \author{Filip Paskali \email{F.Paskali@hs-furtwangen.de}, 
         Weronika Schary \email{W.Schary@hs-furtwangen.de}, 
         Matthias Kohl \email{Matthias.Kohl@stamats.de}}
 \examples{
-## don't run during check
-\dontrun{
+if(interactive()){
   ## start full analysis app
   run_analysis()
   ## start mobile version of full analysis app

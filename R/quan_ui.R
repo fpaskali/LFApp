@@ -12,7 +12,7 @@ quan_ui <- function(request) {
                            sidebarLayout(
                              sidebarPanel(
                                radioButtons("upload",
-                                            label = ("1) Upload Image or Choose Sample"),
+                                            label = ("Upload Image or Choose Sample"),
                                             choices = list("Upload Image" = 1,
                                                            "Sample Image" = 2),
                                             selected = 1),
@@ -31,7 +31,7 @@ quan_ui <- function(request) {
                                ),
                                uiOutput("rotatePanel"),
                                hr(style="border-color: black"),
-                               h5("2) Set number of strips and number of lines per strip",
+                               h5("Set number of strips and number of lines per strip",
                                   style="font-weight:bold"),
                                sliderInput("strips", "Number of strips:",
                                            min = 1, max = 10, value = 1),
@@ -64,7 +64,7 @@ quan_ui <- function(request) {
                            sidebarLayout(
                              sidebarPanel(
                                numericInput(inputId = "selectStrip",
-                                            label = "1) Select strip:",
+                                            label = "Select strip:",
                                             value = 1,
                                             min = 1,
                                             max = 1,
@@ -72,7 +72,7 @@ quan_ui <- function(request) {
                                             width = NULL
                                ),
                                hr(style="border-color: black"),
-                               h5("2) Select threshold method and apply",
+                               h5("Select threshold method",
                                   style="font-weight:bold"),
                                radioButtons("colorImage",
                                             label = ("Color image?"),
@@ -123,13 +123,11 @@ quan_ui <- function(request) {
                                               width = NULL
                                  )
                                ),
-                               actionButton("threshold", label = "2) Apply Threshold"), br(),
+                               actionButton("threshold", label = "Apply Threshold"), br(),
                                hr(style="border-color: black"),
-                               h5("3) Add to Data and go back to 1) or proceed with 4)",
-                                  style="font-weight:bold"),
-                               actionButton("data", label = "3) Add To Data"), br(),
+                               actionButton("data", label = "Add To Intensity Data"), br(),
                                hr(style="border-color: black"),
-                               actionButton("showIntensData", label = "4) Switch To Intensity Data")
+                               actionButton("showIntensData", label = "Switch To Intensity Data")
                              ),
                              mainPanel(
                                HTML(
@@ -153,7 +151,7 @@ quan_ui <- function(request) {
                   tabPanel("Intensity Data", value = "tab3",
                            sidebarLayout(
                              sidebarPanel(
-                               h5("Load existing intensity data", style="font-weight:bold"),
+                               h5("You can aslo upload existing intensity data and proceed with quantification", style="font-weight:bold"),
                                fileInput("intensFile", "Select CSV file",
                                          multiple = FALSE,
                                          accept = c("text/csv",

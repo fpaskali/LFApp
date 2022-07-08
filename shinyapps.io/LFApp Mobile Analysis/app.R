@@ -743,27 +743,35 @@ server <- function(input, output, session){
   recursiveSegmentation <- eventReactive(input$segmentation,{
     isolate({
       p <- input$plot_brush
-      MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
-      colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
-      rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
-      
-      segmentation.list <- vector("list", length = input$strips)
-      count <- 0
-      for(i in 1:input$strips){
-        tmp.list <- vector("list", length = 2*input$bands-1)
-        for(j in 1:(2*input$bands-1)){
-          img <- shinyImageFile$shiny_img_final
-          if(length(dim(img)) == 2)
-            img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
-          else if(length(dim(img)) == 3)
-            img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
-          tmp.list[[j]] <- img
-        }
-        segmentation.list[[i]] <- tmp.list
+      # Check if the region of interest is out of the bounds
+      if (p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1] &&
+          p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2] &&
+          p$xmin >= 0 &&
+          p$ymin >= 0) {
+            MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
+            colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
+            rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
+            
+            segmentation.list <- vector("list", length = input$strips)
+            count <- 0
+            for(i in 1:input$strips){
+              tmp.list <- vector("list", length = 2*input$bands-1)
+              for(j in 1:(2*input$bands-1)){
+                img <- shinyImageFile$shiny_img_final
+                if(length(dim(img)) == 2)
+                  img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
+                else if(length(dim(img)) == 3)
+                  img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
+                tmp.list[[j]] <- img
+              }
+              segmentation.list[[i]] <- tmp.list
+            }
+            shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
+            shinyImageFile$segmentation_list <- segmentation.list
+            updateF7Tabs(session=session, id="tabs", selected = "Background")
+      } else {
+        f7Toast(text="Error: The grid is out of bounds", position="bottom", session=session)
       }
-      shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
-      shinyImageFile$segmentation_list <- segmentation.list
-      updateF7Tabs(session=session, id="tabs", selected = "Background")
     })
   })
   

@@ -1,7 +1,11 @@
 quan_server <- function( input, output, session ) {
   # Cropping and segmentation tab ----------------------------------------------
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
   
-  options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  oldopt <- options()
+  on.exit(options(oldopt))
+  options(shiny.maxRequestSize=100*1024^2) #file can be up to 50 mb; default is 5 mb
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
@@ -11,6 +15,9 @@ quan_server <- function( input, output, session ) {
   calFun <- NULL
   quanData <- NULL
   predictData <- NULL
+  predFunc <- NULL
+  
+  startAutosave <- reactiveVal(value=FALSE)
   
   #checks upload for file input
   observe({
@@ -227,27 +234,35 @@ quan_server <- function( input, output, session ) {
   recursiveSegmentation <- eventReactive(input$segmentation,{
     isolate({
       p <- input$plot_brush
-      MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
-      colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
-      rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
-      
-      segmentation.list <- vector("list", length = input$strips)
-      count <- 0
-      for(i in 1:input$strips){
-        tmp.list <- vector("list", length = 2*input$bands-1)
-        for(j in 1:(2*input$bands-1)){
-          img <- shinyImageFile$shiny_img_final
-          if(length(dim(img)) == 2)
-            img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
-          else if(length(dim(img)) == 3)
-            img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
-          tmp.list[[j]] <- img
+      # Check if the region of interest is out of the bounds
+      if (p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1] &&
+          p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2] &&
+          p$xmin >= 0 &&
+          p$ymin >= 0) {
+        MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
+        colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
+        rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
+        
+        segmentation.list <- vector("list", length = input$strips)
+        count <- 0
+        for(i in 1:input$strips){
+          tmp.list <- vector("list", length = 2*input$bands-1)
+          for(j in 1:(2*input$bands-1)){
+            img <- shinyImageFile$shiny_img_final
+            if(length(dim(img)) == 2)
+              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
+            else if(length(dim(img)) == 3)
+              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
+            tmp.list[[j]] <- img
+          }
+          segmentation.list[[i]] <- tmp.list
         }
-        segmentation.list[[i]] <- tmp.list
+        shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
+        shinyImageFile$segmentation_list <- segmentation.list
+        updateTabsetPanel(session, "tabs", selected = "tab2")
+      } else {
+        showNotification("Error: The grid is out of bounds", duration = 5, type="error")
       }
-      shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
-      shinyImageFile$segmentation_list <- segmentation.list
-      updateTabsetPanel(session, "tabs", selected = "tab2")
     })
   })
   
@@ -490,64 +505,72 @@ quan_server <- function( input, output, session ) {
   
   recursiveData <- eventReactive(input$data,{
     isolate({
-      AM <- shinyImageFile$Mean_Intensities
-      colnames(AM) <- paste0("Mean", 1:input$bands)
-      Med <- shinyImageFile$Median_Intensities
-      colnames(Med) <- paste0("Median", 1:input$bands)
-      # TODO Here else if will improve the app.
-      if(input$thresh == 1){
-        BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")
+      if (!is.null(shinyImageFile$Threshold)) {
+        AM <- shinyImageFile$Mean_Intensities
+        colnames(AM) <- paste0("Mean", 1:input$bands)
+        Med <- shinyImageFile$Median_Intensities
+        colnames(Med) <- paste0("Median", 1:input$bands)
+        # TODO Here else if will improve the app.
+        if(input$thresh == 1){
+          BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")
+        }
+        if(input$thresh == 2){
+          BG.method <- matrix(c("quantile", NA, input$quantile1),
+                              nrow = 1, ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")
+        }
+        if(input$thresh == 3){
+          BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")        
+        }
+        if(input$thresh == 4){
+          BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
+                              ncol = 3, byrow = TRUE)
+          colnames(BG.method) <- c("Background", "Offset", "Probability")        
+        }
+        seg.list <- shinyImageFile$segmentation_list
+        img <- seg.list[[1]][[1]]
+        if(colorMode(img) > 0){
+          MODE <- input$channel
+          DF <- data.frame("File" = shinyImageFile$filename,
+                           "Mode" = MODE,
+                           "Strip" = input$selectStrip,
+                           BG.method, AM, Med,
+                           check.names = FALSE)
+        }else{
+          DF <- data.frame("File" = shinyImageFile$filename,
+                           "Mode" = NA,
+                           "Strip" = input$selectStrip,
+                           BG.method, AM, Med,
+                           check.names = FALSE)
+        }
+        if(inherits(try(IntensData, silent = TRUE), "try-error"))
+          IntensData <<- DF
+        else
+          IntensData <<- rbind(IntensData, DF)
+        
+        output$intens <- renderDT({
+          DF <- IntensData
+          datatable(DF)
+        })
+        output$plot3 <- NULL
+        output$plot4 <- NULL
+        if(!is.null(shinyImageFile$Threshold))
+          shinyImageFile$Threshold <- NULL
+        if(!is.null(shinyImageFile$Mean_Intensities))
+          shinyImageFile$Mean_Intensities <- NULL
+        if(!is.null(shinyImageFile$Median_Intensities))
+          shinyImageFile$Median_Intensities <- NULL
+        
+        
+        # Save the workspace every time you add to intensity data
+        # save(shinyImageFile, IntensData, calFun, predFunc, predictData,
+        #      file=file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData"))
+        # showNotification("Workspace saved", duration=2, type="message")
       }
-      if(input$thresh == 2){
-        BG.method <- matrix(c("quantile", NA, input$quantile1),
-                            nrow = 1, ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")
-      }
-      if(input$thresh == 3){
-        BG.method <- matrix(c("triangle", input$tri_offset, NA), nrow = 1, 
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")        
-      }
-      if(input$thresh == 4){
-        BG.method <- matrix(c("Li", NA, NA), nrow = 1, 
-                            ncol = 3, byrow = TRUE)
-        colnames(BG.method) <- c("Background", "Offset", "Probability")        
-      }
-      seg.list <- shinyImageFile$segmentation_list
-      img <- seg.list[[1]][[1]]
-      if(colorMode(img) > 0){
-        MODE <- input$channel
-        DF <- data.frame("File" = shinyImageFile$filename,
-                         "Mode" = MODE,
-                         "Strip" = input$selectStrip,
-                         BG.method, AM, Med,
-                         check.names = FALSE)
-      }else{
-        DF <- data.frame("File" = shinyImageFile$filename,
-                         "Mode" = NA,
-                         "Strip" = input$selectStrip,
-                         BG.method, AM, Med,
-                         check.names = FALSE)
-      }
-      if(inherits(try(IntensData, silent = TRUE), "try-error"))
-        IntensData <<- DF
-      else
-        IntensData <<- rbind(IntensData, DF)
-      
-      output$intens <- renderDT({
-        DF <- IntensData
-        datatable(DF)
-      })
-      output$plot3 <- NULL
-      output$plot4 <- NULL
-      if(!is.null(shinyImageFile$Threshold))
-        shinyImageFile$Threshold <- NULL
-      if(!is.null(shinyImageFile$Mean_Intensities))
-        shinyImageFile$Mean_Intensities <- NULL
-      if(!is.null(shinyImageFile$Median_Intensities))
-        shinyImageFile$Median_Intensities <- NULL
     })
   })
   
@@ -683,4 +706,60 @@ quan_server <- function( input, output, session ) {
       write.csv(predictData, file, row.names = FALSE)
     }
   )
+  
+  # Checking if workspace file exist
+  observe({
+    if (file.exists(file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData"))) {
+      showModal(modalDialog(
+        title = "Old workspace backup found",
+        "Do you want to restore previous workspace?",
+        h6("If you do not restore the old workspace, it will be overwritten!"),
+        footer = tagList(
+          actionButton("no_restore", "No"),
+          actionButton("restore_work", "Yes")
+        )
+      ))
+    } else {
+      startAutosave(TRUE)
+    }
+  })
+  
+  observeEvent(input$no_restore, {
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  observeEvent(input$restore_work, {
+    load(file=file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData"))
+    
+    # Loading the variables properly. Without this the variables are loaded in the observe scope only
+    shinyImageFile <<- shinyImageFile
+    IntensData <<- IntensData
+    predictData <<- predictData
+    
+    # Loading the image on the first plot
+    if (!is.null(shinyImageFile$shiny_img_final))
+      output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
+    
+    # Loading datatables
+    output$intens <- renderDT(datatable(IntensData))
+    output$quan <- renderDT(datatable(predictData))
+    
+    startAutosave(TRUE)
+    removeModal()
+  })
+  
+  # Autosaving every minute
+  observe({
+    if (startAutosave()) {
+      invalidateLater(300000, session)
+      if (!file.exists(file.path(fs::path_home(), "Documents/LFApp"))) dir.create(file.path(fs::path_home(), "Documents/LFApp"))
+      save(shinyImageFile, IntensData, calFun, predFunc, predictData,
+           file=file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData"))
+      showNotification("Workspace saved", duration=2, type="message")
+    }
+  })
+  
+  # A function to remove the autosave file if the app was closed properly
+  # onStop(function() file.remove(file.path(fs::path_home(), "Documents/LFApp/quan_autosave.RData")))
 }

@@ -1,4 +1,4 @@
-# LFApp: Shiny Apps for Lateral Flow Assays
+# <img src="https://github.com/fpaskali/LFApp/blob/main/hex-LFApp.png" alt="LFApp" width="120"/> &emsp; Shiny Apps for Lateral Flow Assays
 
 The repository includes the development version of R package LFApp
 
@@ -135,3 +135,10 @@ vignette and can be opened via
 ```{r}
 vignette("LFApp")
 ```
+
+You can also find it at https://fpaskali.github.io/LFApp/
+
+
+## YouTube Videos
+
+There is a playlist at https://www.youtube.com/playlist?list=PLRgOZXM8LZ0gJwtsFNxBiu9WJG1TJjFuP

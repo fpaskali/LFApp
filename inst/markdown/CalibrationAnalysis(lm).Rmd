@@ -7,8 +7,8 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(paste0(params$filepath, "_Data.RData"))
-tmp <- strsplit(FORMULA, " ~ ")[[1]]
+load(paste0(params$filename, "_Data.RData"))
+tmp <- strsplit(params$formula, " ~ ")[[1]]
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
 x.var <- names(unlist(sapply(colnames(CalibrationData), 

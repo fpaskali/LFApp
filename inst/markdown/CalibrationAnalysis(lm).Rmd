@@ -7,7 +7,7 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(params$filepath)
+load(paste0(params$filepath, "_Data.RData"))
 tmp <- strsplit(FORMULA, " ~ ")[[1]]
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
@@ -36,7 +36,7 @@ params$formula
 
 We now fit (simple) linear model.
 ```{r}
-fit <- lm(as.formula(FORMULA), data = calData)
+fit <- lm(as.formula(params$formula), data = calData)
 summary(fit)
 ```
 
@@ -46,7 +46,7 @@ ab <- coef(fit)
 names(ab) <- NULL
 predFunc <- function(newdata){}
 body(predFunc) <- substitute({ with(newdata, (eval(y)-a)/b) }, 
-                             list(y = parse(text = respVar), 
+                             list(y = parse(text = tmp[1]), 
                                 a = ab[1], 
                                 b = ab[2]))
 ```
@@ -54,7 +54,7 @@ body(predFunc) <- substitute({ with(newdata, (eval(y)-a)/b) },
 We plot the given concentrations against the fitted values.
 ```{r, warning=FALSE}
 library(ggplot2)
-modelPlot <- ggplot(calData, aes_string(x = concVar, y = respVar)) +
+modelPlot <- ggplot(calData, aes_string(x = tmp[2], y = tmp[1])) +
             geom_point() + geom_smooth(method = "lm") +
             annotate("text",  x=-Inf, y = Inf,
             label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2), 
@@ -91,7 +91,7 @@ LOQ
 
 We save the results.
 ```{r}
-save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.RData")))
+save(fit, LOB, LOD, LOQ, file = paste0(params$filename, "_Results.RData"))
 ```
 
 # Save Model
@@ -99,7 +99,7 @@ save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.R
 We save the inverse of the fitted model to be able to apply it for predicting
 concentrations.
 ```{r}
-saveRDS(object = predFunc, file = file.path(PATH.OUT, paste0(FILENAME, "_Model.rds")))
+saveRDS(object = predFunc, file = paste0(params$filename, "_Model.rds"))
 ```
 
 # Software

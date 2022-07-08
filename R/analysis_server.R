@@ -877,7 +877,7 @@ analysis_server <- function( input, output, session ) {
                   '    toc: true',
                   '    number_sections: true',
                   'params:',
-                  paste0('  filepath: ', file.path(PATH.OUT, paste0(FILENAME, "_Data.RData"))),
+                  paste0('  filename: ', file.path(PATH.OUT, FILENAME)),
                   paste0('  formula: ', FORMULA),
                   '---')
       

@@ -17,7 +17,8 @@ ui <- f7Page(
       animated = TRUE,
       id = "tabs",
       f7Tab(
-        tabName = "Crop & Segmentation",
+        title = "Crop & Segmentation",
+        tabName = "CropSegmentation",
         icon = f7Icon("tray_arrow_up"),
         active = TRUE,
         # Upload file block
@@ -66,7 +67,7 @@ ui <- f7Page(
         ),
         f7Block(
           f7BlockTitle("Cropping and Segmentation", size="medium"),
-          hairlines = TRUE, 
+          hairlines = TRUE,
           strong = TRUE,
           inset = FALSE,
           # The content of the tab goes below this
@@ -81,7 +82,7 @@ ui <- f7Page(
             tags$script("
               $(document).ready(function() {
                 var plot = document.getElementById('plot1')
-        
+
                 plot.addEventListener('touchmove', function (e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('mousemove', {
@@ -96,7 +97,7 @@ ui <- f7Page(
                   touch.target.dispatchEvent(mouseEvent);
                   e.preventDefault()
                 }, { passive: false });
-                
+
                 plot.addEventListener('touchstart', function(e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('mousedown', {
@@ -111,7 +112,7 @@ ui <- f7Page(
                   touch.target.dispatchEvent(mouseEvent);
                   e.preventDefault()
                 }, { passive: false });
-                
+
                 plot.addEventListener('touchstart', function(e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('click', {
@@ -126,7 +127,7 @@ ui <- f7Page(
                   touch.target.dispatchEvent(mouseEvent);
                   e.preventDefault()
                 }, { passive: false });
-        
+
                 plot.addEventListener('touchend', function(e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('mouseup', {
@@ -148,6 +149,7 @@ ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Background",
         tabName = "Background",
         icon = f7Icon("circle_lefthalf_fill"),
         active = FALSE,
@@ -192,7 +194,8 @@ ui <- f7Page(
         uiOutput("threshPlots"),
       ),
       f7Tab(
-        tabName = "Intensity Data",
+        title = "Intensity Data",
+        tabName = "IntensityData",
         icon = f7Icon("table"),
         active = FALSE,
         f7Block(
@@ -222,7 +225,8 @@ ui <- f7Page(
         )
       ),
       f7Tab(
-        tabName = "Experiment Info",
+        title = "Experiment Info",
+        tabName = "ExperimentInfo",
         icon = f7Icon("info_circle"),
         active = FALSE,
         f7Block(
@@ -238,7 +242,7 @@ ui <- f7Page(
                                   ".csv")),
                 f7AccordionItem(
                   title = "CSV options",
-                  f7checkBox("header", "Header", TRUE),
+                  f7Checkbox("header", "Header", TRUE),
                   f7Radio("sep", "Separator",
                           choices = c("Comma ( , )",
                                       "Semicolon ( ; )",
@@ -280,6 +284,7 @@ ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Calibration",
         tabName = "Calibration",
         icon = f7Icon("graph_square"),
         active = FALSE,
@@ -347,7 +352,7 @@ ui <- f7Page(
               f7TextArea("subset", label = "Optional: specify subset (logical R expression)"),
               f7Text("concVar", label = "Specify column with concentration"),
               # f7Text("concVar", "Specify column with concentration"),
-              f7checkBox("useLog", "Logarithmize concentration", value=FALSE),
+              f7Checkbox("useLog", "Logarithmize concentration", value=FALSE),
               f7Block(
                 strong = TRUE,
                 f7Block(
@@ -368,6 +373,7 @@ ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Results",
         tabName = "Results",
         icon = f7Icon("doc_text_search"),
         active = FALSE,
@@ -375,6 +381,7 @@ ui <- f7Page(
         uiOutput("saveModelButton")
       ),
       f7Tab(
+        title = "Quantification",
         tabName = "Quantification",
         icon = f7Icon("gauge"),
         active = FALSE,
@@ -382,9 +389,9 @@ ui <- f7Page(
           hairlines = FALSE,
           strong = TRUE,
           inset = FALSE,
-          f7Radio(inputId= "quanUpload", 
-                  label="You can use Intensity Data or upload new data", 
-                  choices=list("Use Intensity Data", "Upload Data"), 
+          f7Radio(inputId= "quanUpload",
+                  label="You can use Intensity Data or upload new data",
+                  choices=list("Use Intensity Data", "Upload Data"),
                   selected = "Upload Data"),
           conditionalPanel(
             condition = "input.quanUpload == 'Upload Data'",
@@ -394,7 +401,7 @@ ui <- f7Page(
           )
         ),
         f7Block(
-          strong = TRUE, 
+          strong = TRUE,
           h3("Load existing model from file"),
           f7File(inputId = 'model',
                  label = 'Select model',
@@ -421,7 +428,7 @@ triangle <- function(image, offset = 0.2, breaks = 256) {
   breaks <- as.integer(breaks)
   stopifnot(offset >= 0)
   stopifnot(breaks > 0)
-  
+
   ## compute histogram and extract counts and breaks
   rg <- range(image)
   bins <- breaks
@@ -429,22 +436,22 @@ triangle <- function(image, offset = 0.2, breaks = 256) {
   image.hist <- hist.default(imageData(image), breaks = breaks, plot = FALSE)
   hist.counts <- image.hist$counts
   hist.breaks <- image.hist$breaks
-  
+
   ## centers of bins
   delta <- hist.breaks[2]-hist.breaks[1]
   hist.bins <- hist.breaks[-(bins+1)] + delta/2
-  
+
   ## location of peaks and peak value
   ind.peaks <- which(hist.counts == max(hist.counts))
   ind.first.peak <- ind.peaks[1]
   ind.last.peak <- ind.peaks[length(ind.peaks)]
   peak.height <- hist.counts[ind.first.peak]
-  
+
   ## fist and last bin with positive count
   pos.counts <- which(hist.counts > 0)
   ind.low <- pos.counts[1]
   ind.high <- pos.counts[length(pos.counts)]
-  
+
   if((ind.first.peak - ind.low) < (ind.high - ind.last.peak)){
     ## right tail is longer
     sel <- ind.last.peak:ind.high
@@ -459,7 +466,7 @@ triangle <- function(image, offset = 0.2, breaks = 256) {
     distances <- (1-norm.counts)*norm.bins/sqrt((1-norm.counts)^2 + norm.bins^2)
   }
   ind.max <- which.max(distances)
-  
+
   hist.bins[sel[ind.max]] + offset
 }
 
@@ -483,17 +490,17 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
       stop(sprintf("The threshold_li must be greater than 0 and lesser than max
                    value of the image. threshold_li is %s", threshold_li))
     } else {
-      stop("The initial_guess has incorrect class. It should be numeric or a 
+      stop("The initial_guess has incorrect class. It should be numeric or a
            function that returns numeric value.")
     }
   }
   # The difference between t_next and t_curr should be equal to the tolerance.
   t_curr <- tolerance * (-2)
-  
+
   if (!is.null(iter_callback)) {
     iter_callback(t_next + image_min)
-  } 
-  
+  }
+
   # Stop the iteration when the difference between the new and old threshold
   # value is less than the tolerance
   while(abs(t_next - t_curr) > tolerance) {
@@ -501,10 +508,10 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
     foreground <- (image > t_curr)
     mean_fore <- mean(image[foreground])
     mean_back <- mean(image[!foreground])
-    
+
     t_next <- ((mean_back - mean_fore) /
                  (log(mean_back) - log(mean_fore)))
-    
+
     if (!is.null(iter_callback)) {
       iter_callback(t_next + image_min)
     }
@@ -515,9 +522,9 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
 
 server <- function(input, output, session){
   ########## FIRST TAB
-  
+
   options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
-  shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL, 
+  shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
   predFunc <- NULL
@@ -529,7 +536,7 @@ server <- function(input, output, session){
   LOD <- NULL
   LOQ <- NULL
   calFun <- NULL
-  
+
   # checks upload for file imput
   observe({
     #default: upload image
@@ -546,14 +553,14 @@ server <- function(input, output, session){
       shinyImageFile$shiny_img_origin <- img
       shinyImageFile$shiny_img_cropped <- img
       shinyImageFile$shiny_img_final <- img
-      
+
       shinyImageFile$filename <- "sample.TIF"
       #outputs image to plot1 -- main plot
       output$plot1 <- renderPlot({ EBImage::display(shinyImageFile$shiny_img_final, method = "raster") })
     }
     drawCropButtons()
   })
-  
+
   # if the new file is entered, it will become new ImageFile
   observeEvent(input$file1, {
     shinyImageFile$filename <- input$file1$name
@@ -563,27 +570,27 @@ server <- function(input, output, session){
     shinyImageFile$shiny_img_final <- img
     output$plot1 <- renderPlot({EBImage::display(img, method = "raster")})
   })
-  
+
   #the datapath is different from the one needed to properly recognize photo
-  #so this function renames the file 
+  #so this function renames the file
   renameUpload <- function(inFile){
     if(is.null(inFile))
       return(NULL)
-    
+
     oldNames <- inFile$datapath
     newNames <- file.path(dirname(inFile$datapath), inFile$name)
     file.rename(from = oldNames, to = newNames)
     inFile$datapath <- newNames
-    
+
     return(inFile$datapath)
   }
-  
+
   drawCropButtons <- function(resetButton=FALSE, segButton=FALSE) {
     output$cropButtons <- renderUI({
       tagList(
         f7Segment(
           if (resetButton) {
-            f7Button("reset", color = "blue", label = "Reset") 
+            f7Button("reset", color = "blue", label = "Reset")
           } else {
             f7Button("no-reset", color = "gray", label = "Reset")
           },
@@ -596,11 +603,11 @@ server <- function(input, output, session){
       )
     })
   }
-  
+
   # Rotation ----------------------------------------------------------------
-  
+
   observe({reactiveRotation()})
-  
+
   reactiveRotation <- eventReactive(input$rotate, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -611,9 +618,9 @@ server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationCCW()})
-  
+
   reactiveRotationCCW <- eventReactive(input$rotateCCW, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -624,9 +631,9 @@ server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationCW()})
-  
+
   reactiveRotationCW <- eventReactive(input$rotateCW, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -637,9 +644,9 @@ server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationFlip()})
-  
+
   reactiveRotationFlip <- eventReactive(input$fliphor, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -650,9 +657,9 @@ server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationFlop()})
-  
+
   reactiveRotationFlop <- eventReactive(input$flipver, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -662,8 +669,8 @@ server <- function(input, output, session){
         session$resetBrush("plot_brush")
       }
     })
-  }) 
-  
+  })
+
   croppedImage <- function(image, xmin, ymin, xmax, ymax){
     if(length(dim(image)) == 2)
       image <- image[xmin:xmax, ymin:ymax, drop = FALSE]
@@ -671,9 +678,9 @@ server <- function(input, output, session){
       image <- image[xmin:xmax, ymin:ymax, ,drop = FALSE]
     return(image)
   }
-  
+
   observe({resetImage()})
-  
+
   resetImage <- eventReactive(input$reset,{
     isolate({
       shinyImageFile$shiny_img_cropped <- shinyImageFile$shiny_img_origin
@@ -684,22 +691,22 @@ server <- function(input, output, session){
       drawCropButtons()
     })
   })
-  
-  
+
+
   #prompts shiny to look at recursive crop
   observe({recursiveCrop()})
-  
+
   #only executes when selection box is double clicked
   recursiveCrop <- eventReactive(input$plot_dblclick,{
     isolate({
       p <- input$plot_brush
-      validate(need(p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1], 
+      validate(need(p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1],
                     "Highlighted portion is out of bounds on the x-axis"))
-      validate(need(p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2], 
+      validate(need(p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2],
                     "Highlighted portion is out of bounds on the y-axis"))
-      validate(need(p$xmin >= 0, 
+      validate(need(p$xmin >= 0,
                     "Highlighted portion is out of bounds on the x-axis"))
-      validate(need(p$ymin >= 0, 
+      validate(need(p$ymin >= 0,
                     "Highlighted portion is out of bounds on the y-axis"))
       shinyImageFile$shiny_img_cropped <- croppedImage(shinyImageFile$shiny_img_final, p$xmin, p$ymin, p$xmax, p$ymax)
       shinyImageFile$shiny_img_final <- shinyImageFile$shiny_img_cropped
@@ -713,18 +720,18 @@ server <- function(input, output, session){
     session$resetBrush("plot_brush")
   })
 
-  
+
   observe({recursiveGrid()})
-  
+
   recursiveGrid <- eventReactive(input$plot_brush,{
     isolate({
       p <- input$plot_brush
       output$plot1 <- renderPlot({
         EBImage::display(shinyImageFile$shiny_img_final, method = "raster")
-        
+
         colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
         rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands) # bands + spaces between bands
-        
+
         for (x in colcuts) {
           lines(x = rep(x, 2), y = c(p$ymin, p$ymax), col="red")
         }
@@ -735,10 +742,10 @@ server <- function(input, output, session){
       drawCropButtons(segButton = TRUE, resetButton = TRUE)
     })
   })
-  
-  
+
+
   observe({recursiveSegmentation()})
-  
+
   #only executes when Apply Segmentation is clicked
   recursiveSegmentation <- eventReactive(input$segmentation,{
     isolate({
@@ -751,7 +758,7 @@ server <- function(input, output, session){
             MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
             colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
             rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
-            
+
             segmentation.list <- vector("list", length = input$strips)
             count <- 0
             for(i in 1:input$strips){
@@ -774,15 +781,15 @@ server <- function(input, output, session){
       }
     })
   })
-  
+
   ################ END OF FIRST TAB
-  
+
   ############## SECOND TAB
   observe({
     input$thresh
     updateF7Stepper("selectStrip", max=input$strips)
   })
-  
+
   showThresholdPlots <- function() {
     output$threshPlots <- renderUI({
       tagList(
@@ -806,7 +813,7 @@ server <- function(input, output, session){
       )
     })
   }
-  
+
   observe({recursiveThreshold()})
 
   recursiveThreshold <- eventReactive(input$threshold,{
@@ -1030,7 +1037,7 @@ server <- function(input, output, session){
       }
     })
   })
-  
+
   output$thresh <- renderText({
     if(!is.null(shinyImageFile$Threshold))
       paste0("Threshold(s): ", paste0(signif(shinyImageFile$Threshold, 4), collapse = ", "))
@@ -1043,7 +1050,7 @@ server <- function(input, output, session){
     if(!is.null(shinyImageFile$Threshold))
       paste0("Median intensities: ", paste0(signif(shinyImageFile$Median_Intensities, 4), collapse = ", "))
   })
-    
+
   observe({recursiveData()})
 
   recursiveData <- eventReactive(input$data,{
@@ -1108,19 +1115,19 @@ server <- function(input, output, session){
         shinyImageFile$Median_Intensities <- NULL
     })
   })
-  
+
   output$intens <- renderDT({
     DF <- IntensData
     datatable(DF)
   })
-  
+
   observe({recursiveShowIntensData()})
   recursiveShowIntensData <- eventReactive(input$showIntensData,{
     isolate({
-      updateF7Tabs(session=session, id="tabs", selected = "Intensity Data")
+      updateF7Tabs(session=session, id="tabs", selected = "IntensityData")
     })
   })
-  
+
   observe({recursiveDelete()})
   recursiveDelete <- eventReactive(input$deleteData,{
     isolate({
@@ -1128,7 +1135,7 @@ server <- function(input, output, session){
       output$intens <- renderDT({})
     })
   })
-  
+
   observe({recursiveDelete2()})
   recursiveDelete2 <- eventReactive(input$deleteData2,{
     isolate({
@@ -1137,7 +1144,7 @@ server <- function(input, output, session){
       output$experiment <- renderDT({})
     })
   })
-  
+
   observe({recursiveDelete3()})
   recursiveDelete3 <- eventReactive(input$deleteData3,{
     isolate({
@@ -1146,7 +1153,7 @@ server <- function(input, output, session){
       output$calibration <- renderDT({})
     })
   })
-  
+
   observe({recursiveRefresh()})
   recursiveRefresh <- eventReactive(input$refreshData,{
     isolate({
@@ -1156,7 +1163,7 @@ server <- function(input, output, session){
       })
     })
   })
-  
+
   observe({recursiveRefresh2()})
   recursiveRefresh2 <- eventReactive(input$refreshData2,{
     isolate({
@@ -1166,7 +1173,7 @@ server <- function(input, output, session){
       })
     })
   })
-  
+
   observe({recursiveRefresh3()})
   recursiveRefresh3 <- eventReactive(input$refreshData3,{
     isolate({
@@ -1176,13 +1183,13 @@ server <- function(input, output, session){
       })
     })
   })
-  
+
   observe({recursiveExpInfo()})
-  
+
   recursiveExpInfo <- eventReactive(input$expInfo,{
-    updateF7Tabs(session=session, id="tabs", selected = "Experiment Info")
+    updateF7Tabs(session=session, id="tabs", selected = "ExperimentInfo")
   })
-  
+
   observe({recursiveUploadIntens()})
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
@@ -1198,7 +1205,7 @@ server <- function(input, output, session){
       })
     })
   })
-  
+
   observe({recursiveUploadExpFile()})
   recursiveUploadExpFile <- eventReactive(input$expFile,{
     isolate({
@@ -1212,13 +1219,13 @@ server <- function(input, output, session){
       MergedData <<- DF
       suppressWarnings(rm(CalibrationData, pos = 1))
       output$calibration <- renderDT({})
-      
+
       output$experiment <- renderDT({
         datatable(DF)
       })
     })
   })
-  
+
   observe({recursiveUploadPrepFile()})
   recursiveUploadPrepFile <- eventReactive(input$prepFile,{
     isolate({
@@ -1234,36 +1241,36 @@ server <- function(input, output, session){
       })
     })
   })
-  
+
   observe({recursiveMerge()})
   recursiveMerge <- eventReactive(input$merge,{
     isolate({
       DF <- merge(ExpInfo, IntensData,
                   by.x = input$mergeExp,
                   by.y = input$mergeIntens, all = TRUE)
-      
+
       MergedData <<- DF
       CalibrationData <<- DF
-      
+
       output$experiment <- renderDT({
         datatable(DF)
       })
     })
   })
-  
+
   observe({recursivePrepare()})
   recursivePrepare <- eventReactive(input$prepare,{
     DF <- MergedData
     CalibrationData <<- DF
-    
+
     output$calibration <- renderDT({
       datatable(DF)
     })
-    
+
     updateF7Tabs(session=session, id="tabs", selected = "Calibration")
   })
-  
-  
+
+
   #Download code
   output$downloadData <- downloadHandler(
     filename = "IntensityData.csv",
@@ -1283,7 +1290,7 @@ server <- function(input, output, session){
       write.csv(CalibrationData, file, row.names = FALSE)
     }
   )
-  
+
   observe({recursiveCombReps()})
   recursiveCombReps <- eventReactive(input$combReps,{
     isolate({
@@ -1318,21 +1325,21 @@ server <- function(input, output, session){
       rownames(RES) <- 1:nrow(RES)
       RES <- RES[order(RES[,input$combRepsColSI]),]
       CalibrationData <<- RES
-      
+
       output$calibration <- renderDT({
         datatable(RES)
       })
     })
   })
-  
+
   observe({recursiveReshapeWide()})
-  
+
   recursiveReshapeWide <- eventReactive(input$reshapeWide,{
     isolate({
       rm.file <- (colnames(CalibrationData) != colnames(MergedData)[1] &
                     colnames(CalibrationData) != input$reshapeCol)
       DF.split <- split(CalibrationData[,rm.file], CalibrationData[,input$reshapeCol])
-      
+
       N <- length(unique(CalibrationData[,input$reshapeCol]))
       if(N > 1){
         DF <- DF.split[[1]]
@@ -1347,13 +1354,13 @@ server <- function(input, output, session){
       }else{
         DF <- CalibrationData
       }
-      
+
       output$calibration <- renderDT({
         datatable(DF)
       })
     })
   })
-  
+
   MODELNUM <- 1
 
   output$runCali <- downloadHandler(
@@ -1371,33 +1378,33 @@ server <- function(input, output, session){
           verbatimTextOutput("LOQ")
         )
       })
-      
+
       # flush the output and plots
       output$LOB <- renderText({})
       output$LOD <- renderText({})
       output$LOQ <- renderText({})
       output$plot5 <- renderPlot({})
-      
+
       concVar <- input$concVar
       respVar <- paste0("(",input$respVar,")")
 
       if(input$useLog){
         if(input$chosenModel == "Generalized additive model (gam)"){
           k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
+          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")
         }else{
-          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
+          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")
         }
       }else{
         if(input$chosenModel == "Generalized additive model (gam)"){
           k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
+          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")
         }else{
           FORMULA <- paste0(respVar, " ~ ", concVar)
         }
       }
-      
-      
+
+
       if(input$chosenModel == "Linear model (lm)" && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
         modelName <- "lm"
       } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
@@ -1420,13 +1427,13 @@ server <- function(input, output, session){
         updateF7Tabs(session=session, id="tabs", selected = "Results")
         return(NULL)
       }
-      
+
       f7Toast(text=paste("Fitting the model..."), position="top", session=session)
-      
+
       SUBSET <- input$subset
-      
+
       # FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
-      
+
       # save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
       #      file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
       if (input$chosenModel == "Linear model (lm)") {
@@ -1451,11 +1458,11 @@ server <- function(input, output, session){
       out <- rmarkdown::render("ReportAnalysis.Rmd", "html_document")
       file.rename(out,file)
       # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
-      
+
       predFunc <<- predFunc # make predFunc global for save model feature
-      
+
       output$modelSummary <- renderPrint({ fit })
-      
+
       output$plot5 <- renderPlot({
         modelPlot
       })
@@ -1468,7 +1475,7 @@ server <- function(input, output, session){
       output$LOQ <- renderText({
         paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
       })
-      
+
       # Adding the analysis name and model formula to the table
       modelName <- rep(modelName, nrow(CalibrationData))
       modelFormula <- rep(FORMULA, nrow(CalibrationData))
@@ -1477,56 +1484,56 @@ server <- function(input, output, session){
       } else {
         modelDF <- cbind(modelName, modelFormula, fit$fitted.values)
       }
-      colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
-                             paste0(input$analysisName, ".formula"), 
+      colnames(modelDF) <- c(paste0(input$analysisName, ".model"),
+                             paste0(input$analysisName, ".formula"),
                              paste0(input$analysisName, ".fit"))
       CalibrationData <<- cbind(CalibrationData, modelDF)
       output$calibration <- renderDT({
         datatable(CalibrationData)
       })
-      
+
       MODELNUM <<- MODELNUM + 1
-      
+
       output$saveModelButton <- renderUI({
         f7Block(
-          strong = TRUE, 
+          strong = TRUE,
           h3("Save calibration model"),
           f7DownloadButton("saveModel", label = "Save Model")
         )
       })
-      
+
       updateF7Text(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
-      
+
       updateF7Tabs(session=session, id="tabs", selected = "Results")
     })
-  
+
   # observe(resetFolder())
-  # 
+  #
   # resetFolder <- eventReactive(input$folder,{
   #   isolate({
   #     if(substring(input$folder,1,nchar(file.path(fs::path_home()))) != file.path(fs::path_home()))
-  #       updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home())) 
+  #       updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home()))
   #   })
   # })
-  
+
   output$saveModel <- downloadHandler(
     filename= "Model.rds",
     content = function(file) {
       saveRDS(object=predFunc, file)
     }
   )
-  
+
   # Quantification module ------------------------------------------------------
   observeEvent(input$quanData, {
     quanData <<- read.csv(input$quanData$datapath)
   })
-  
+
   observeEvent(input$model, {
     calFun <<- readRDS(input$model$datapath)
   })
-  
+
   observe({predictConc()})
-  
+
   predictConc <- eventReactive(input$predict, {
     isolate(
       if (!is.null(calFun)) {
@@ -1550,7 +1557,7 @@ server <- function(input, output, session){
       }
     )
   })
-  
+
   #allows user to download prediction
   output$downloadData4 <- downloadHandler(
     filename = "PredictData.csv",

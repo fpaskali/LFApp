@@ -2,17 +2,17 @@ quan_mobile_server <- function(input, output, session){
   ########## FIRST TAB
   oldpar <- par(no.readonly = TRUE)
   on.exit(par(oldpar))
-  
+
   oldopt <- options()
   on.exit(options(oldopt))
   options(shiny.maxRequestSize=100*1024^2) #file can be up to 50 mb; default is 5 mb
-  shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL, 
+  shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
   IntensData <- NULL
   calFun <- NULL
   quanData <- NULL
   predictData <- NULL
-  
+
   # checks upload for file imput
   observe({
     #default: upload image
@@ -29,14 +29,14 @@ quan_mobile_server <- function(input, output, session){
       shinyImageFile$shiny_img_origin <- img
       shinyImageFile$shiny_img_cropped <- img
       shinyImageFile$shiny_img_final <- img
-      
+
       shinyImageFile$filename <- "sample.TIF"
       #outputs image to plot1 -- main plot
       output$plot1 <- renderPlot({ EBImage::display(shinyImageFile$shiny_img_final, method = "raster") })
     }
     drawCropButtons()
   })
-  
+
   # if the new file is entered, it will become new ImageFile
   observeEvent(input$file1, {
     shinyImageFile$filename <- input$file1$name
@@ -46,13 +46,13 @@ quan_mobile_server <- function(input, output, session){
     shinyImageFile$shiny_img_final <- img
     output$plot1 <- renderPlot({EBImage::display(img, method = "raster")})
   })
-  
+
   drawCropButtons <- function(resetButton=FALSE, segButton=FALSE) {
     output$cropButtons <- renderUI({
       tagList(
         f7Segment(
           if (resetButton) {
-            f7Button("reset", color = "blue", label = "Reset") 
+            f7Button("reset", color = "blue", label = "Reset")
           } else {
             f7Button("no-reset", color = "gray", label = "Reset")
           },
@@ -65,11 +65,11 @@ quan_mobile_server <- function(input, output, session){
       )
     })
   }
-  
+
   # Rotation ----------------------------------------------------------------
-  
+
   observe({reactiveRotation()})
-  
+
   reactiveRotation <- eventReactive(input$rotate, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -80,9 +80,9 @@ quan_mobile_server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationCCW()})
-  
+
   reactiveRotationCCW <- eventReactive(input$rotateCCW, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -93,9 +93,9 @@ quan_mobile_server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationCW()})
-  
+
   reactiveRotationCW <- eventReactive(input$rotateCW, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -106,9 +106,9 @@ quan_mobile_server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationFlip()})
-  
+
   reactiveRotationFlip <- eventReactive(input$fliphor, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -119,9 +119,9 @@ quan_mobile_server <- function(input, output, session){
       }
     })
   })
-  
+
   observe({reactiveRotationFlop()})
-  
+
   reactiveRotationFlop <- eventReactive(input$flipver, {
     isolate({
       if (!is.null(shinyImageFile$shiny_img_cropped)) {
@@ -131,8 +131,8 @@ quan_mobile_server <- function(input, output, session){
         session$resetBrush("plot_brush")
       }
     })
-  }) 
-  
+  })
+
   croppedImage <- function(image, xmin, ymin, xmax, ymax){
     if(length(dim(image)) == 2)
       image <- image[xmin:xmax, ymin:ymax, drop = FALSE]
@@ -140,9 +140,9 @@ quan_mobile_server <- function(input, output, session){
       image <- image[xmin:xmax, ymin:ymax, ,drop = FALSE]
     return(image)
   }
-  
+
   observe({resetImage()})
-  
+
   resetImage <- eventReactive(input$reset,{
     isolate({
       shinyImageFile$shiny_img_cropped <- shinyImageFile$shiny_img_origin
@@ -153,22 +153,22 @@ quan_mobile_server <- function(input, output, session){
       drawCropButtons()
     })
   })
-  
-  
+
+
   #prompts shiny to look at recursive crop
   observe({recursiveCrop()})
-  
+
   #only executes when selection box is double clicked
   recursiveCrop <- eventReactive(input$plot_dblclick,{
     isolate({
       p <- input$plot_brush
-      validate(need(p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1], 
+      validate(need(p$xmax <= dim(shinyImageFile$shiny_img_cropped)[1],
                     "Highlighted portion is out of bounds on the x-axis"))
-      validate(need(p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2], 
+      validate(need(p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2],
                     "Highlighted portion is out of bounds on the y-axis"))
-      validate(need(p$xmin >= 0, 
+      validate(need(p$xmin >= 0,
                     "Highlighted portion is out of bounds on the x-axis"))
-      validate(need(p$ymin >= 0, 
+      validate(need(p$ymin >= 0,
                     "Highlighted portion is out of bounds on the y-axis"))
       shinyImageFile$shiny_img_cropped <- croppedImage(shinyImageFile$shiny_img_final, p$xmin, p$ymin, p$xmax, p$ymax)
       shinyImageFile$shiny_img_final <- shinyImageFile$shiny_img_cropped
@@ -182,18 +182,18 @@ quan_mobile_server <- function(input, output, session){
     session$resetBrush("plot_brush")
   })
 
-  
+
   observe({recursiveGrid()})
-  
+
   recursiveGrid <- eventReactive(input$plot_brush,{
     isolate({
       p <- input$plot_brush
       output$plot1 <- renderPlot({
         EBImage::display(shinyImageFile$shiny_img_final, method = "raster")
-        
+
         colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
         rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands) # bands + spaces between bands
-        
+
         for (x in colcuts) {
           lines(x = rep(x, 2), y = c(p$ymin, p$ymax), col="red")
         }
@@ -204,10 +204,10 @@ quan_mobile_server <- function(input, output, session){
       drawCropButtons(segButton = TRUE, resetButton = TRUE)
     })
   })
-  
-  
+
+
   observe({recursiveSegmentation()})
-  
+
   #only executes when Apply Segmentation is clicked
   recursiveSegmentation <- eventReactive(input$segmentation,{
     isolate({
@@ -220,7 +220,7 @@ quan_mobile_server <- function(input, output, session){
         MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
         colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
         rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
-        
+
         segmentation.list <- vector("list", length = input$strips)
         count <- 0
         for(i in 1:input$strips){
@@ -243,15 +243,15 @@ quan_mobile_server <- function(input, output, session){
       }
     })
   })
-  
+
   ################ END OF FIRST TAB
-  
+
   ############## SECOND TAB
   observe({
     input$thresh
     updateF7Stepper("selectStrip", max=input$strips)
   })
-  
+
   showThresholdPlots <- function() {
     output$threshPlots <- renderUI({
       tagList(
@@ -275,7 +275,7 @@ quan_mobile_server <- function(input, output, session){
       )
     })
   }
-  
+
   observe({recursiveThreshold()})
 
   recursiveThreshold <- eventReactive(input$threshold,{
@@ -499,7 +499,7 @@ quan_mobile_server <- function(input, output, session){
       }
     })
   })
-  
+
   output$thresh <- renderText({
     if(!is.null(shinyImageFile$Threshold))
       paste0("Threshold(s): ", paste0(signif(shinyImageFile$Threshold, 4), collapse = ", "))
@@ -512,7 +512,7 @@ quan_mobile_server <- function(input, output, session){
     if(!is.null(shinyImageFile$Threshold))
       paste0("Median intensities: ", paste0(signif(shinyImageFile$Median_Intensities, 4), collapse = ", "))
   })
-    
+
   observe({recursiveData()})
 
   recursiveData <- eventReactive(input$data,{
@@ -577,19 +577,19 @@ quan_mobile_server <- function(input, output, session){
         shinyImageFile$Median_Intensities <- NULL
     })
   })
-  
+
   output$intens <- renderDT({
     DF <- IntensData
     datatable(DF)
   })
-  
+
   observe({recursiveShowIntensData()})
   recursiveShowIntensData <- eventReactive(input$showIntensData,{
     isolate({
-      updateF7Tabs(session=session, id="tabs", selected = "Intensity Data")
+      updateF7Tabs(session=session, id="tabs", selected = "IntensityData")
     })
   })
-  
+
   observe({recursiveDelete()})
   recursiveDelete <- eventReactive(input$deleteData,{
     isolate({
@@ -597,8 +597,8 @@ quan_mobile_server <- function(input, output, session){
       output$intens <- renderDT({})
     })
   })
-  
-  
+
+
   observe({recursiveRefresh()})
   recursiveRefresh <- eventReactive(input$refreshData,{
     isolate({
@@ -608,13 +608,13 @@ quan_mobile_server <- function(input, output, session){
       })
     })
   })
-  
+
 
   observeEvent(input$intensFile,{
     output$intens <- renderDT({})
     suppressWarnings(rm(IntensData, pos = 1))
   })
-  
+
   observe({recursiveUploadIntens()})
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
@@ -630,14 +630,14 @@ quan_mobile_server <- function(input, output, session){
       })
     })
   })
-  
+
   observe({recursiveQuant()})
-  
+
   recursiveQuant <- eventReactive(input$quant,{
     updateF7Tabs(session=session, id="tabs", selected = "Quantification")
   })
-  
-  
+
+
   #Download code
   output$downloadData <- downloadHandler(
     filename = "IntensityData.csv",
@@ -645,18 +645,18 @@ quan_mobile_server <- function(input, output, session){
       write.csv(IntensData, file, row.names = FALSE)
     }
   )
-  
+
   # Quantification module ------------------------------------------------------
   observeEvent(input$quanData, {
     quanData <<- read.csv(input$quanData$datapath)
   })
-  
+
   observeEvent(input$model, {
     calFun <<- readRDS(input$model$datapath)
   })
-  
+
   observe({predictConc()})
-  
+
   predictConc <- eventReactive(input$predict, {
     isolate(
       if (!is.null(calFun)) {
@@ -680,7 +680,7 @@ quan_mobile_server <- function(input, output, session){
       }
     )
   })
-  
+
   #allows user to download prediction
   output$downloadData4 <- downloadHandler(
     filename = "PredictData.csv",

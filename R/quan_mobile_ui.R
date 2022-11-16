@@ -10,7 +10,8 @@ quan_mobile_ui <- f7Page(
       animated = TRUE,
       id = "tabs",
       f7Tab(
-        tabName = "Crop & Segmentation",
+        title = "Crop & Segmentation",
+        tabName = "CropSegmentation",
         icon = f7Icon("tray_arrow_up"),
         active = TRUE,
         # Upload file block
@@ -59,7 +60,7 @@ quan_mobile_ui <- f7Page(
         ),
         f7Block(
           f7BlockTitle("Cropping and Segmentation", size="medium"),
-          hairlines = TRUE, 
+          hairlines = TRUE,
           strong = TRUE,
           inset = FALSE,
           # The content of the tab goes below this
@@ -72,8 +73,9 @@ quan_mobile_ui <- f7Page(
           uiOutput("cropButtons")
         )
       ),
-      
+
       f7Tab(
+        title = "Background",
         tabName = "Background",
         icon = f7Icon("circle_lefthalf_fill"),
         active = FALSE,
@@ -117,9 +119,10 @@ quan_mobile_ui <- f7Page(
         ),
         uiOutput("threshPlots"),
       ),
-      
+
       f7Tab(
-        tabName = "Intensity Data",
+        title = "Intensity Data",
+        tabName = "IntensityData",
         icon = f7Icon("table"),
         active = FALSE,
         f7Block(
@@ -149,6 +152,7 @@ quan_mobile_ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Quantification",
         tabName = "Quantification",
         icon = f7Icon("gauge"),
         active = FALSE,
@@ -156,9 +160,9 @@ quan_mobile_ui <- f7Page(
           hairlines = FALSE,
           strong = TRUE,
           inset = FALSE,
-          f7Radio(inputId= "quanUpload", 
-                  label="You can use Intensity Data or upload new data", 
-                  choices=list("Use Intensity Data", "Upload Data"), 
+          f7Radio(inputId= "quanUpload",
+                  label="You can use Intensity Data or upload new data",
+                  choices=list("Use Intensity Data", "Upload Data"),
                   selected = "Upload Data"),
           conditionalPanel(
             condition = "input.quanUpload == 'Upload Data'",
@@ -168,7 +172,7 @@ quan_mobile_ui <- f7Page(
           )
         ),
         f7Block(
-          strong = TRUE, 
+          strong = TRUE,
           h3("Load existing model from file"),
           f7File(inputId = 'model',
                  label = 'Select model',

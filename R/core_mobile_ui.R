@@ -10,7 +10,8 @@ core_mobile_ui <- f7Page(
       animated = TRUE,
       id = "tabs",
       f7Tab(
-        tabName = "Crop & Segmentation",
+        title = "Crop & Segmentation",
+        tabName = "CropSegmentation",
         icon = f7Icon("tray_arrow_up"),
         active = TRUE,
         # Upload file block
@@ -59,7 +60,7 @@ core_mobile_ui <- f7Page(
         ),
         f7Block(
           f7BlockTitle("Cropping and Segmentation", size="medium"),
-          hairlines = TRUE, 
+          hairlines = TRUE,
           strong = TRUE,
           inset = FALSE,
           # The content of the tab goes below this
@@ -73,6 +74,7 @@ core_mobile_ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Background",
         tabName = "Background",
         icon = f7Icon("circle_lefthalf_fill"),
         active = FALSE,
@@ -117,7 +119,8 @@ core_mobile_ui <- f7Page(
         uiOutput("threshPlots"),
       ),
       f7Tab(
-        tabName = "Intensity Data",
+        title = "Intensity Data",
+        tabName = "IntensityData",
         icon = f7Icon("table"),
         active = FALSE,
         f7Block(

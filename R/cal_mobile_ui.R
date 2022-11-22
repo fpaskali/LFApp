@@ -10,7 +10,8 @@ cal_mobile_ui <- f7Page(
       animated = TRUE,
       id = "tabs",
       f7Tab(
-        tabName = "Crop & Segmentation",
+        title = "Crop & Segmentation",
+        tabName = "CropSegmentation",
         icon = f7Icon("tray_arrow_up"),
         active = TRUE,
         # Upload file block
@@ -59,7 +60,7 @@ cal_mobile_ui <- f7Page(
         ),
         f7Block(
           f7BlockTitle("Cropping and Segmentation", size="medium"),
-          hairlines = TRUE, 
+          hairlines = TRUE,
           strong = TRUE,
           inset = FALSE,
           # The content of the tab goes below this
@@ -74,7 +75,7 @@ cal_mobile_ui <- f7Page(
             tags$script("
               $(document).ready(function() {
                 var plot = document.getElementById('plot1')
-        
+
                 plot.addEventListener('touchmove', function (e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('mousemove', {
@@ -89,7 +90,7 @@ cal_mobile_ui <- f7Page(
                   touch.target.dispatchEvent(mouseEvent);
                   e.preventDefault()
                 }, { passive: false });
-                
+
                 plot.addEventListener('touchstart', function(e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('mousedown', {
@@ -104,7 +105,7 @@ cal_mobile_ui <- f7Page(
                   touch.target.dispatchEvent(mouseEvent);
                   e.preventDefault()
                 }, { passive: false });
-                
+
                 plot.addEventListener('touchstart', function(e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('click', {
@@ -119,7 +120,7 @@ cal_mobile_ui <- f7Page(
                   touch.target.dispatchEvent(mouseEvent);
                   e.preventDefault()
                 }, { passive: false });
-        
+
                 plot.addEventListener('touchend', function(e) {
                   var touch = e.changedTouches[0];
                   var mouseEvent = new MouseEvent('mouseup', {
@@ -141,6 +142,7 @@ cal_mobile_ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Background",
         tabName = "Background",
         icon = f7Icon("circle_lefthalf_fill"),
         active = FALSE,
@@ -185,7 +187,8 @@ cal_mobile_ui <- f7Page(
         uiOutput("threshPlots"),
       ),
       f7Tab(
-        tabName = "Intensity Data",
+        title = "Intensity Data",
+        tabName = "IntensityData",
         icon = f7Icon("table"),
         active = FALSE,
         f7Block(
@@ -215,7 +218,8 @@ cal_mobile_ui <- f7Page(
         )
       ),
       f7Tab(
-        tabName = "Experiment Info",
+        title = "Experiment Info",
+        tabName = "ExperimentInfo",
         icon = f7Icon("info_circle"),
         active = FALSE,
         f7Block(
@@ -273,6 +277,7 @@ cal_mobile_ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Calibration",
         tabName = "Calibration",
         icon = f7Icon("graph_square"),
         active = FALSE,
@@ -354,7 +359,7 @@ cal_mobile_ui <- f7Page(
                 )
               ),
               f7Segment(
-                f7Text("folder","Working directory:", value=file.path(fs::path_home(), "Documents/LFApp"), 
+                f7Text("folder","Working directory:", value=file.path(fs::path_home(), "Documents/LFApp"),
                        placeholder=file.path(fs::path_home(), "Documents/LFApp")),
                 f7Button("runCali", label = "Run Calibration Analysis")
               )
@@ -363,11 +368,12 @@ cal_mobile_ui <- f7Page(
         )
       ),
       f7Tab(
+        title = "Results",
         tabName = "Results",
         icon = f7Icon("doc_text_search"),
         active = FALSE,
         f7Block(
-          strong = TRUE, 
+          strong = TRUE,
           h3("Open analysis report"),
           f7Button("openReport", label = "Open")
         ),

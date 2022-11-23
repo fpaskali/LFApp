@@ -1,16 +1,17 @@
 Package: LFApp
 Version: 1.3.1
-Date: 2021-07-27
+Date: 2022-11-13
 Title: Shiny Apps for Lateral Flow Assays
 Authors@R: c(person("Filip", "Paskali", role = c("aut", "cre"),
-                  email = "F.Paskali@hs-furtwangen.de"),
+                  email = "F.Paskali@hs-furtwangen.de",
+                  comment = c(ORCID = "0000-0002-9647-6294")),
              person("Weronika", "Schary", role = "aut",
                   email = "W.Schary@hs-furtwangen.de", 
                   comment = c(ORCID = "0000-0002-7229-316X")),
              person("Matthias", "Kohl", role = "aut",
                   email = "Matthias.Kohl@stamats.de", 
                   comment = c(ORCID = "0000-0001-9514-8910")))
-Author: Filip Paskali [aut, cre], Weronika Schary [aut] (<https://orcid.org/0000-0002-7229-316X>), Matthias Kohl [aut] (<https://orcid.org/0000-0001-9514-8910>)
+Author: Filip Paskali [aut, cre] (<https://orcid.org/0000-0002-9647-6294>), Weronika Schary [aut] (<https://orcid.org/0000-0002-7229-316X>), Matthias Kohl [aut] (<https://orcid.org/0000-0001-9514-8910>)
 Maintainer: Filip Paskali <F.Paskali@hs-furtwangen.de>
 Description: Shiny apps for the quantitative analysis of images from lateral flow assays (LFAs). The images are segmented and background corrected and color intensities are extracted. The apps can be used to import and export intensity data and to calibrate LFAs by means of linear, loess, or gam models. The calibration models can further be saved and applied to intensity data from new images for determining concentrations.
 License: LGPL-3

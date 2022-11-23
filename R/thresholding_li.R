@@ -9,7 +9,7 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
   # Initial estimate for iterations
   if (is.null(initial_guess)) {
     t_next <- mean(image)
-  } else if (class(initial_guess)=="function"){
+  } else if (is(initial_guess,"function")){
     t_next <- initial_guess(image)
   } else if (is.numeric(initial_guess)) {
     t_next <- initial_guess - image_min

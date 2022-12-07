@@ -63,17 +63,6 @@ if(!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("EBImage", update = FALSE)
 ```
 
-Our package depends on the most recent version of package shinyMobile, which 
-must be installed from github (https://github.com/RinteRface/shinyMobile) by
-
-```{r}
-## Install package remotes
-if(!requireNamespace("remotes", quietly = TRUE)) 
-  install.packages("remotes")
-## Install package shinyMobile
-remotes::install_github("RinteRface/shinyMobile")
-```
-
 For generating our vignette and automatic reports, we need packages knitr and
 rmarkdown, which will be installed next.
 

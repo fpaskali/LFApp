@@ -510,7 +510,6 @@ quan_server <- function( input, output, session ) {
         colnames(AM) <- paste0("Mean", 1:input$bands)
         Med <- shinyImageFile$Median_Intensities
         colnames(Med) <- paste0("Median", 1:input$bands)
-        # TODO Here else if will improve the app.
         if(input$thresh == 1){
           BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
                               ncol = 3, byrow = TRUE)
@@ -539,13 +538,13 @@ quan_server <- function( input, output, session ) {
                            "Mode" = MODE,
                            "Strip" = input$selectStrip,
                            BG.method, AM, Med,
-                           check.names = FALSE)
+                           check.names = TRUE)
         }else{
           DF <- data.frame("File" = shinyImageFile$filename,
                            "Mode" = NA,
                            "Strip" = input$selectStrip,
                            BG.method, AM, Med,
-                           check.names = FALSE)
+                           check.names = TRUE)
         }
         if(inherits(try(IntensData, silent = TRUE), "try-error"))
           IntensData <<- DF
@@ -613,7 +612,7 @@ quan_server <- function( input, output, session ) {
       req(input$intensFile)
       tryCatch(
         DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       IntensData <<- DF

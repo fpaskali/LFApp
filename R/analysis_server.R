@@ -866,21 +866,38 @@ analysis_server <- function( input, output, session ) {
       SUBSET <- input$subset
       
       FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
+
+      header <- c('---',
+                  'title: "Calibration Analysis"',
+                  'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
+                  'output:',
+                  '  rmarkdown::html_document:',
+                  '    theme: united',
+                  '    highlight: tango',
+                  '    toc: true',
+                  '    number_sections: true',
+                  'params:',
+                  paste0('  filename: ', file.path(PATH.OUT, FILENAME)),
+                  paste0('  formula: ', FORMULA),
+                  '---')
       
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
            file = file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
       if (input$chosenModel == 1) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
-                                     package = "LFApp"),
-                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
+        template <- readLines(system.file("markdown", "CalibrationAnalysis(lm).Rmd",
+                                          package = "LFApp"))
+        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
       } else if (input$chosenModel == 2) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(loess).Rmd",
-                                     package = "LFApp"),
-                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
+        template <- readLines(system.file("markdown", "CalibrationAnalysis(loess)).Rmd",
+                                          package = "LFApp"))
+        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
       } else if (input$chosenModel == 3) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
-                                     package = "LFApp"),
-                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
+        template <- readLines(system.file("markdown", "CalibrationAnalysis(gam).Rmd",
+                                          package = "LFApp"))
+        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
       }
       
       rmarkdown::render(input = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")),

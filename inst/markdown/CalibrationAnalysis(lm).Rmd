@@ -1,14 +1,4 @@
----
-title: "Calibration Analysis"
-date: "`r format(Sys.time(), '%d %B %Y')`"
-output:
-  rmarkdown::html_document:
-    theme: united
-    highlight: tango
-    toc: true
-    number_sections: true
----
-  
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
@@ -17,11 +7,12 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
-tmp <- strsplit(FORMULA, "~")[[1]]
+load(paste0(params$filename, "_Data.RData"))
+tmp <- strsplit(params$formula, " ~ ")[[1]]
+
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
-x.vars <- names(unlist(sapply(colnames(CalibrationData), 
+x.var <- names(unlist(sapply(colnames(CalibrationData), 
                               grep, x = tmp[2])))
 if(SUBSET != ""){
   calData <- eval(call("subset", x =  CalibrationData,
@@ -29,7 +20,7 @@ if(SUBSET != ""){
 }else{
   calData <- CalibrationData
 }
-calData <- calData[,c(y.var, x.vars)]
+calData <- calData[,c(y.var, x.var)]
 calData
 ```
 
@@ -38,7 +29,7 @@ calData
 
 We will apply the following model.
 ```{r}
-FORMULA
+params$formula
 ```
 
 
@@ -46,7 +37,7 @@ FORMULA
 
 We now fit (simple) linear model.
 ```{r}
-fit <- lm(as.formula(FORMULA), data = calData)
+fit <- lm(as.formula(params$formula), data = calData)
 summary(fit)
 ```
 
@@ -56,7 +47,7 @@ ab <- coef(fit)
 names(ab) <- NULL
 predFunc <- function(newdata){}
 body(predFunc) <- substitute({ with(newdata, (eval(y)-a)/b) }, 
-                             list(y = parse(text = respVar), 
+                             list(y = parse(text = tmp[1]), 
                                 a = ab[1], 
                                 b = ab[2]))
 ```
@@ -64,12 +55,12 @@ body(predFunc) <- substitute({ with(newdata, (eval(y)-a)/b) },
 We plot the given concentrations against the fitted values.
 ```{r, warning=FALSE}
 library(ggplot2)
-modelPlot <- ggplot(calData, aes_string(x = concVar, y = respVar)) +
+modelPlot <- ggplot(calData, aes_string(x = tmp[2], y = tmp[1])) +
             geom_point() + geom_smooth(method = "lm") +
             annotate("text",  x=-Inf, y = Inf,
-            label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2), 
-                              list(R2 = signif(summary(fit)$r.squared,3), 
-                                   adj.R2 = signif(summary(fit)$adj.r.squared, 3))), 
+            label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2),
+                              list(R2 = signif(summary(fit)$r.squared,3),
+                              adj.R2 = signif(summary(fit)$adj.r.squared, 3))),
             vjust=1, hjust=0, size = 5)
 modelPlot
 ```
@@ -102,7 +93,7 @@ LOQ
 
 We save the results.
 ```{r}
-save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.RData")))
+save(fit, LOB, LOD, LOQ, file = paste0(params$filename, "_Results.RData"))
 ```
 
 # Save Model
@@ -110,7 +101,7 @@ save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.R
 We save the inverse of the fitted model to be able to apply it for predicting
 concentrations.
 ```{r}
-saveRDS(object = predFunc, file = file.path(PATH.OUT, paste0(FILENAME, "_Model.rds")))
+saveRDS(object = predFunc, file = paste0(params$filename, "_Model.rds"))
 ```
 
 # Software

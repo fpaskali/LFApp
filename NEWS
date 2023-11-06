@@ -3,14 +3,29 @@
 ###############################################################################
 
 ###########################################################
+## Version 1.4
+###########################################################
+- Minor fixes in server files
+- Updated man files
+- Updated CITATION
+- Updated contact info
+- Updated shinyapps.io LFApp
+
+###########################################################
 ## Version 1.3.1
 ###########################################################
 - Patch for shinyMobile 1.0.0
+- Changes in Rmarkdown files, to enable independent knitting of the Report.
 
 ###########################################################
-## Version 1.0
+## Version 1.3
 ###########################################################
-- First release of the package
+- Some further modifications requested during CRAN submission
+
+###########################################################
+## Version 1.2
+###########################################################
+- Minor corrections requested during CRAN submission
 
 ###########################################################
 ## Version 1.1
@@ -19,11 +34,6 @@
 - Added autosave feature to restore the workspace after crash
 
 ###########################################################
-## Version 1.2
+## Version 1.0
 ###########################################################
-- minor corrections requested during CRAN submission
-
-###########################################################
-## Version 1.3
-###########################################################
-- some further modifications requested during CRAN submission
+- First release of the package

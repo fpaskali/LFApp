@@ -12,15 +12,12 @@ library(mgcv)
 
 app_ui <- function(request) {
   tagList(
-    # Leave this function for adding external resources
-    # golem_add_external_resources(),
-    # List the first level UI elements here 
     fluidPage(
       theme = shinytheme("sandstone"),
       useShinyjs(),
       titlePanel("LFA App analysis"),
-      tags$style(type='text/css', "#stop { float:right; }"),
-      # actionButton("stop", "Quit App"),
+      tags$style(type='text/css', "#verInfo { float:right; }"),
+      h6(id="verInfo", "v 1.4"),
       tabsetPanel(id = "tabs",
                   ## Start of Tab Image Editor
                   tabPanel("Cropping and Segmentation", value = "tab1",
@@ -464,20 +461,27 @@ threshold_li <- function(image, tolerance=NULL, initial_guess=NULL, iter_callbac
 
 app_server <- function( input, output, session ) {
   ###### FIRST TAB
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
   
+  oldopt <- options()
+  on.exit(options(oldopt))
   options(shiny.maxRequestSize=50*1024^2) #file can be up to 50 mb; default is 5 mb
+  ## initializations
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL, shiny_img_cropped = NULL,
                                    shiny_img_final = NULL, Threshold = NULL)
-  
   IntensData <- NULL
   ExpInfo <- NULL
   MergedData <- NULL
+  FILENAME <- NULL
   fit <- NULL
   modelPlot <- NULL
   LOB <- NULL
   LOD <- NULL
   LOQ <- NULL
   calFun <- NULL
+  quanData <- NULL
+  CalibrationData <- NULL
   predFunc <- NULL
   predictData <- NULL
   
@@ -701,27 +705,27 @@ app_server <- function( input, output, session ) {
           p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2] &&
           p$xmin >= 0 &&
           p$ymin >= 0) {
-            MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
-            colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
-            rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
-            
-            segmentation.list <- vector("list", length = input$strips)
-            count <- 0
-            for(i in 1:input$strips){
-              tmp.list <- vector("list", length = 2*input$bands-1)
-              for(j in 1:(2*input$bands-1)){
-                img <- shinyImageFile$shiny_img_final
-                if(length(dim(img)) == 2)
-                  img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
-                else if(length(dim(img)) == 3)
-                  img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
-                tmp.list[[j]] <- img
-              }
-              segmentation.list[[i]] <- tmp.list
-            }
-            shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
-            shinyImageFile$segmentation_list <- segmentation.list
-            updateTabsetPanel(session, "tabs", selected = "tab2")
+        MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
+        colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
+        rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
+        
+        segmentation.list <- vector("list", length = input$strips)
+        count <- 0
+        for(i in 1:input$strips){
+          tmp.list <- vector("list", length = 2*input$bands-1)
+          for(j in 1:(2*input$bands-1)){
+            img <- shinyImageFile$shiny_img_final
+            if(length(dim(img)) == 2)
+              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
+            else if(length(dim(img)) == 3)
+              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
+            tmp.list[[j]] <- img
+          }
+          segmentation.list[[i]] <- tmp.list
+        }
+        shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
+        shinyImageFile$segmentation_list <- segmentation.list
+        updateTabsetPanel(session, "tabs", selected = "tab2")
       } else {
         showNotification("Error: The grid is out of bounds", duration = 5, type="error")
       }
@@ -1001,13 +1005,13 @@ app_server <- function( input, output, session ) {
                            "Mode" = MODE,
                            "Strip" = input$selectStrip,
                            BG.method, AM, Med,
-                           check.names = FALSE)
+                           check.names = TRUE)
         }else{
           DF <- data.frame("File" = shinyImageFile$filename,
                            "Mode" = NA,
                            "Strip" = input$selectStrip,
                            BG.method, AM, Med,
-                           check.names = FALSE)
+                           check.names = TRUE)
         }
         if(inherits(try(IntensData, silent = TRUE), "try-error"))
           IntensData <<- DF
@@ -1026,13 +1030,6 @@ app_server <- function( input, output, session ) {
           shinyImageFile$Mean_Intensities <- NULL
         if(!is.null(shinyImageFile$Median_Intensities))
           shinyImageFile$Median_Intensities <- NULL
-        
-        # Save the workspace everytime you add to intensity data
-        save(shinyImageFile, IntensData, ExpInfo, 
-             MergedData, fit, modelPlot, LOB, 
-             LOD, LOQ, calFun, predFunc, predictData,
-             file="autosave.RData")
-        showNotification("Workspace saved", duration=2, type="message")
       }
     })
   })
@@ -1112,7 +1109,7 @@ app_server <- function( input, output, session ) {
       req(input$intensFile)
       tryCatch(
         DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       IntensData <<- DF
@@ -1128,7 +1125,7 @@ app_server <- function( input, output, session ) {
       req(input$expFile)
       tryCatch(
         DF <- read.csv(input$expFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       ExpInfo <<- DF
@@ -1148,10 +1145,11 @@ app_server <- function( input, output, session ) {
       req(input$prepFile)
       tryCatch(
         DF <- read.csv(input$prepFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       CalibrationData <<- DF
+      MergedData <<- DF
       output$calibration <- renderDT({
         datatable(DF)
       })
@@ -1167,9 +1165,9 @@ app_server <- function( input, output, session ) {
       } else if (is.null(IntensData)) {
         showNotification("Intensity data not found.", duration=3, type="error")
       } else if (inherits(try(merge(ExpInfo, IntensData,
-                             by.x = input$mergeExp,
-                             by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
-        showNotification("Error in the column IDs.", duration = 5, type="error")
+                                    by.x = input$mergeExp,
+                                    by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
+        showNotification("Error in the column IDs.", duration=5, type="error")
       } else {
         DF <- merge(ExpInfo, IntensData,
                     by.x = input$mergeExp,
@@ -1193,7 +1191,7 @@ app_server <- function( input, output, session ) {
     output$calibration <- renderDT({
       datatable(DF)
     })
-    updateSelectInput(session = session, "concVar", choices = names(DF))
+    updateSelectInput(session, "concVar", choices = names(DF))
     updateTabsetPanel(session, "tabs", selected = "tab5")
   })
   
@@ -1316,38 +1314,52 @@ app_server <- function( input, output, session ) {
       
       SUBSET <- input$subset
       
-      # FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
-      
-      # save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-      #      file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
-      
-        
+      FILENAME <<- "Calibration"
 
+      header <- c('---',
+                  'title: "Calibration Analysis"',
+                  'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
+                  'output:',
+                  '  rmarkdown::html_document:',
+                  '    theme: united',
+                  '    highlight: tango',
+                  '    toc: true',
+                  '    number_sections: true',
+                  'params:',
+                  paste0('  filename: ', FILENAME),
+                  paste0('  formula: ', FORMULA),
+                  '---')
+      
       if (input$chosenModel == 1) {
         src <- normalizePath("CalibrationAnalysis(lm).Rmd")
         owd <- setwd(tempdir())
         on.exit(setwd(owd))
-        file.copy(src,
-                  "ReportAnalysis.Rmd", overwrite = TRUE)
+        save(CalibrationData, SUBSET,
+             file = paste0(FILENAME, "_Data.RData"))
+        template <- readLines(src)
+        write(header, file="ReportAnalysis.Rmd", append=FALSE)
+        write(template, file="ReportAnalysis.Rmd", append=TRUE)
       } else if (input$chosenModel == 2) {
         src <- normalizePath("CalibrationAnalysis(loess).Rmd")
         owd <- setwd(tempdir())
         on.exit(setwd(owd))
-        file.copy(src,
-                  "ReportAnalysis.Rmd", overwrite = TRUE)
+        save(CalibrationData, SUBSET,
+             file = paste0(FILENAME, "_Data.RData"))
+        template <- readLines(src)
+        write(header, file="ReportAnalysis.Rmd", append=FALSE)
+        write(template, file="ReportAnalysis.Rmd", append=TRUE)
       } else if (input$chosenModel == 3) {
         src <- normalizePath("CalibrationAnalysis(gam).Rmd")
         owd <- setwd(tempdir())
         on.exit(setwd(owd))
-        file.copy(src,
-                  "ReportAnalysis.Rmd", overwrite = TRUE)
+        save(CalibrationData, SUBSET,
+             file = paste0(FILENAME, "_Data.RData"))
+        template <- readLines(src)
+        write(header, file="ReportAnalysis.Rmd", append=FALSE)
+        write(template, file="ReportAnalysis.Rmd", append=TRUE)
       }
       out <- rmarkdown::render("ReportAnalysis.Rmd", html_document())
       file.rename(out,file)
-    
-      # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
-      
-      predFunc <<- predFunc # make predFunc global for save model feature
       
       output$modelSummary <- renderPrint({ fit })
       
@@ -1367,17 +1379,24 @@ app_server <- function( input, output, session ) {
       # Adding the analysis name and model formula to the table
       modelName <- rep(modelName, nrow(CalibrationData))
       modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      if (input$chosenModel == 2) {
-        modelDF <- cbind(modelName, modelFormula, fit$fitted)
-      } else {
-        modelDF <- cbind(modelName, modelFormula, fit$fitted.values)
-      }
+      modelDF <- cbind(modelName, modelFormula, predFunc(CalibrationData))
       colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
                              paste0(input$analysisName, ".formula"), 
-                             paste0(input$analysisName, ".fit"))
-      CalibrationData <<- cbind(CalibrationData, modelDF)
+                             paste0(input$analysisName, ".", input$concVar, ".fit"))
+      if(SUBSET != ""){
+        subsetIndex <- function (x, subset){
+          e <- substitute(subset)
+          r <- eval(e, x, parent.frame())
+          r & !is.na(r)
+        }
+        Index <- eval(call("subsetIndex", x = CalibrationData, 
+                           subset = parse(text = SUBSET)))
+        modelDF[!Index,] <- NA
+      }
+      DF <- cbind(CalibrationData, modelDF)
+      CalibrationData <<- DF
       output$calibration <- renderDT({
-        datatable(CalibrationData)
+        datatable(DF)
       })
       
       MODELNUM <<- MODELNUM + 1
@@ -1389,17 +1408,6 @@ app_server <- function( input, output, session ) {
       
       updateTabsetPanel(session, "tabs", selected = "tab6")
     })
-  
-  
-  # observe(resetFolder())
-  
-  # resetFolder <- eventReactive(input$folder,{
-  #   isolate({
-  #     if(substring(input$folder,1,nchar(file.path(fs::path_home()))) != file.path(fs::path_home()))
-  #       updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home())) 
-  #   })
-  # })
-  # 
 
   output$saveModel <- downloadHandler(
     filename= paste0("Model.rds"),
@@ -1420,6 +1428,10 @@ app_server <- function( input, output, session ) {
   output$medianIntens <- renderText({
     if(!is.null(shinyImageFile$Threshold))
       paste0("Median intensities: ", paste0(signif(shinyImageFile$Median_Intensities, 4), collapse = ", "))
+  })
+  output$intens <- renderDT({
+    DF <- IntensData
+    datatable(DF)
   })
   output$folder <- renderPrint({
     paste0("Folder for Results: ", parseDirPath(c(wd=fs::path_home()), input$folder))
@@ -1464,13 +1476,13 @@ app_server <- function( input, output, session ) {
   observeEvent(input$quanData, {
     quanData <<- read.csv(input$quanData$datapath)
   })
-
+  
   observeEvent(input$model, {
     calFun <<- readRDS(input$model$datapath)
   })
   
   observe({predictConc()})
-
+  
   predictConc <- eventReactive(input$predict, {
     isolate(
       if (!is.null(calFun)) {
@@ -1494,7 +1506,7 @@ app_server <- function( input, output, session ) {
       }
     )
   })
-
+  
   #allows user to download prediction
   output$downloadData4 <- downloadHandler(
     filename = "PredictData.csv",
@@ -1502,80 +1514,6 @@ app_server <- function( input, output, session ) {
       write.csv(predictData, file, row.names = FALSE)
     }
   )
-  
-  # Checking if workspace file exist
-  observe({
-    if (file.exists("autosave.RData")) {
-      showModal(modalDialog(
-        title = "Old workspace backup found",
-        "Do you want to restore previous workspace?",
-        h6("If you do not restore the old workspace, it will be overwritten!"),
-        footer = tagList(
-          actionButton("no_restore", "No"),
-          actionButton("restore_work", "Yes")
-        )
-      ))
-    } else {
-      startAutosave(TRUE)
-    }
-  })
-  
-  observeEvent(input$no_restore, {
-    startAutosave(TRUE)
-    removeModal()
-  })
-  
-  observeEvent(input$restore_work, {
-    load(file="autosave.RData")
-    
-    # Loading the variables properly. Without this the variables are loaded in the observe scope only
-    shinyImageFile <<- shinyImageFile
-    IntensData <<- IntensData
-    ExpInfo <<- ExpInfo
-    MergedData <<- MergedData
-    predictData <<- predictData
-    fit <<- fit
-    modelPlot <<- modelPlot
-    LOB <<- LOB
-    LOD <<- LOD
-    LOQ <<- LOQ
-    
-    # Loading the image on the first plot
-    if (!is.null(shinyImageFile$shiny_img_final))
-      output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
-    
-    # Loading datatables
-    output$intens <- renderDT(datatable(IntensData))
-    output$experiment <- renderDT(datatable(ExpInfo))
-    output$calibration <- renderDT(datatable(MergedData))
-    output$quan <- renderDT(datatable(predictData))
-    
-    # Loading model in results tab
-    if (!is.null(fit) && !is.null(LOB) && !is.null(LOD) && !is.null(LOQ)) {
-      output$modelSummary <- renderPrint({ fit })
-      output$plot5 <- renderPlot({ modelPlot })
-      output$LOB <- renderText({ paste0("Limit of Blank (LOB): ", signif(LOB, 3)) })
-      output$LOD <- renderText({ paste0("Limit of Detection (LOD): ", signif(LOD, 3)) })
-      output$LOQ <- renderText({ paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3)) })
-    }
-    startAutosave(TRUE)
-    removeModal()
-  })
-  
-  # Autosaving every minute
-  observe({
-    if (startAutosave()) {
-      invalidateLater(60000, session)
-      save(shinyImageFile, IntensData, ExpInfo, 
-           MergedData, fit, modelPlot, LOB, 
-           LOD, LOQ, calFun, predFunc, predictData,
-           file="autosave.RData")
-      showNotification("Workspace saved", duration=2, type="message")
-    }
-  })
-  
-  # A function to remove the autosave file if the app was closed properly
-  # onStop(function() file.remove("autosave.RData"))
 }
 
 shinyApp(app_ui, app_server)

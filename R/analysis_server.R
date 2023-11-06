@@ -516,7 +516,6 @@ analysis_server <- function( input, output, session ) {
         colnames(AM) <- paste0("Mean", 1:input$bands)
         Med <- shinyImageFile$Median_Intensities
         colnames(Med) <- paste0("Median", 1:input$bands)
-        # TODO Here else if will improve the app.
         if(input$thresh == 1){
           BG.method <- matrix(c("Otsu", NA, NA), nrow = 1,
                               ncol = 3, byrow = TRUE)
@@ -545,13 +544,13 @@ analysis_server <- function( input, output, session ) {
                            "Mode" = MODE,
                            "Strip" = input$selectStrip,
                            BG.method, AM, Med,
-                           check.names = FALSE)
+                           check.names = TRUE)
         }else{
           DF <- data.frame("File" = shinyImageFile$filename,
                            "Mode" = NA,
                            "Strip" = input$selectStrip,
                            BG.method, AM, Med,
-                           check.names = FALSE)
+                           check.names = TRUE)
         }
         if(inherits(try(IntensData, silent = TRUE), "try-error"))
           IntensData <<- DF
@@ -656,7 +655,7 @@ analysis_server <- function( input, output, session ) {
       req(input$intensFile)
       tryCatch(
         DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       IntensData <<- DF
@@ -672,7 +671,7 @@ analysis_server <- function( input, output, session ) {
       req(input$expFile)
       tryCatch(
         DF <- read.csv(input$expFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       ExpInfo <<- DF
@@ -692,7 +691,7 @@ analysis_server <- function( input, output, session ) {
       req(input$prepFile)
       tryCatch(
         DF <- read.csv(input$prepFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       CalibrationData <<- DF
@@ -866,21 +865,38 @@ analysis_server <- function( input, output, session ) {
       SUBSET <- input$subset
       
       FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
+
+      header <- c('---',
+                  'title: "Calibration Analysis"',
+                  'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
+                  'output:',
+                  '  rmarkdown::html_document:',
+                  '    theme: united',
+                  '    highlight: tango',
+                  '    toc: true',
+                  '    number_sections: true',
+                  'params:',
+                  paste0('  filename: ', file.path(PATH.OUT, FILENAME)),
+                  paste0('  formula: ', FORMULA),
+                  '---')
       
       save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
            file = file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
       if (input$chosenModel == 1) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(lm).Rmd",
-                                     package = "LFApp"),
-                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
+        template <- readLines(system.file("markdown", "CalibrationAnalysis(lm).Rmd",
+                                          package = "LFApp"))
+        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
       } else if (input$chosenModel == 2) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(loess).Rmd",
-                                     package = "LFApp"),
-                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
+        template <- readLines(system.file("markdown", "CalibrationAnalysis(loess)).Rmd",
+                                          package = "LFApp"))
+        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
       } else if (input$chosenModel == 3) {
-        file.copy(from = system.file("markdown", "CalibrationAnalysis(gam).Rmd",
-                                     package = "LFApp"),
-                  to = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")))
+        template <- readLines(system.file("markdown", "CalibrationAnalysis(gam).Rmd",
+                                          package = "LFApp"))
+        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
       }
       
       rmarkdown::render(input = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")),

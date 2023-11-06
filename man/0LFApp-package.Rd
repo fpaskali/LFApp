@@ -13,23 +13,11 @@ means of linear, loess, or gam models. The calibration models can further be sav
 and applied to intensity data from new images for determining concentrations.
 }
 \details{
-\tabular{ll}{
-Package: \tab LFApp\cr
-Type: \tab Package\cr
-Version: \tab 1.3\cr
-Date: \tab 2021-07-27\cr
-Depends: \tab R(>= 4.0.0)\cr
-Imports: \tab stats, utils, graphics, methods, mgcv, shiny, shinyjs, shinythemes, shinyFiles, shinyMobile (>= 0.9), EBImage, DT, ggplot2, fs\cr
-Suggests: \tab knitr, rmarkdown, remotes\cr
-License: \tab LGPL-3\cr
-URL: \tab https://github.com/fpaskali/LFApp\cr
-BugReports: \tab https://github.com/fpaskali/LFApp/issues\cr
-}
 library(LFApp)
 }
 \author{ Filip Paskali, Weronika Schary, Matthias Kohl
 
-Maintainer: Filip Paskali  \email{F.Paskali@hs-furtwangen.de}}
+Maintainer: Filip Paskali  \email{Filip.Paskali@gmail.com}}
 %\references{
 %~~ Literature or other references for background information ~~
 %}

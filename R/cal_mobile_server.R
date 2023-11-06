@@ -557,13 +557,13 @@ cal_mobile_server <- function(input, output, session){
                          "Mode" = MODE,
                          "Strip" = input$selectStrip,
                          BG.method, AM, Med,
-                         check.names = FALSE)
+                         check.names = TRUE)
       }else{
         DF <- data.frame("File" = shinyImageFile$filename,
                          "Mode" = NA,
                          "Strip" = input$selectStrip,
                          BG.method, AM, Med,
-                         check.names = FALSE)
+                         check.names = TRUE)
       }
       if(inherits(try(IntensData, silent = TRUE), "try-error"))
         IntensData <<- DF
@@ -666,7 +666,7 @@ cal_mobile_server <- function(input, output, session){
       req(input$intensFile)
       tryCatch(
         DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       IntensData <<- DF
@@ -682,7 +682,7 @@ cal_mobile_server <- function(input, output, session){
       req(input$expFile)
       tryCatch(
         DF <- read.csv(input$expFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       ExpInfo <<- DF
@@ -702,7 +702,7 @@ cal_mobile_server <- function(input, output, session){
       req(input$prepFile)
       tryCatch(
         DF <- read.csv(input$prepFile$datapath, header = TRUE,
-                       check.names = FALSE),
+                       check.names = TRUE),
         error = function(e){stop(safeError(e))}
       )
       CalibrationData <<- DF

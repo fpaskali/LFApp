@@ -1,14 +1,4 @@
----
-title: "Calibration Analysis"
-date: "`r format(Sys.time(), '%d %B %Y')`"
-output:
-  rmarkdown::html_document:
-    theme: united
-    highlight: tango
-    toc: true
-    number_sections: true
----
-  
+ 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -17,11 +7,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 We import the data and select the variables needed for the analysis.
 ```{r}
-load(file.path(PATH.OUT,paste0(FILENAME, "_Data.RData")))
-tmp <- strsplit(FORMULA, "~")[[1]]
+load(paste0(params$filename, "_Data.RData"))
+tmp <- strsplit(params$formula, " ~ ")[[1]]
+
 y.var <- names(unlist(sapply(colnames(CalibrationData), 
                              grep, x = tmp[1])))
-x.vars <- names(unlist(sapply(colnames(CalibrationData), 
+x.var <- names(unlist(sapply(colnames(CalibrationData), 
                               grep, x = tmp[2])))
 if(SUBSET != ""){
   calData <- eval(call("subset", x =  CalibrationData,
@@ -29,7 +20,7 @@ if(SUBSET != ""){
 }else{
   calData <- CalibrationData
 }
-calData <- calData[,c(y.var, x.vars)]
+calData <- calData[,c(y.var, x.var)]
 calData
 ```
 
@@ -38,7 +29,7 @@ calData
 
 We will apply the following model.
 ```{r}
-FORMULA
+params$formula
 ```
 
 
@@ -46,7 +37,7 @@ FORMULA
 
 We now fit local polynomial model.
 ```{r}
-fit <- loess(as.formula(FORMULA), data = calData)
+fit <- loess(as.formula(params$formula), data = calData)
 summary(fit)
 ```
 
@@ -55,15 +46,15 @@ fitted model by spline interpolation.
 ```{r}
 N <- 100 # number of points for interpolation
 ab <- coef(fit)
-conc <- seq(from = 0, to = max(calData[,concVar]), len = N)
+conc <- seq(from = 0, to = max(calData[,tmp[2]]), len = N)
 newDF <- data.frame(conc = conc)
-names(newDF) <- concVar
+names(newDF) <- tmp[2]
 resp <- predict(fit, newdata = newDF)
 names(resp) <- NULL
 predFunc <- function(newdata){}
 body(predFunc) <- substitute({ Y <- with(newdata, eval(y))
                          fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
-                         fun(Y) }, list(y = parse(text = respVar),
+                         fun(Y) }, list(y = parse(text = tmp[1]),
                                         resp = resp,
                                         conc = conc))
   
@@ -74,7 +65,7 @@ fun <- splinefun(x = resp, y = conc, method = "monoH.FC")
 We plot the given concentrations against the fitted values.
 ```{r}
 library(ggplot2)
-modelPlot <- ggplot(calData, aes_string(x = concVar, y = respVar)) +
+modelPlot <- ggplot(calData, aes_string(x = tmp[2], y = tmp[1])) +
                 geom_point() + geom_smooth(method = "loess")
 modelPlot
 ```
@@ -107,7 +98,7 @@ LOQ
 
 We save the results.
 ```{r}
-save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.RData")))
+save(fit, LOB, LOD, LOQ, file = paste0(params$filename, "_Results.RData"))
 ```
 
 # Save Model
@@ -115,7 +106,7 @@ save(fit, LOB, LOD, LOQ, file = file.path(PATH.OUT, paste0(FILENAME, "_Results.R
 We save the inverse of the fitted model to be able to apply it for predicting
 concentrations.
 ```{r}
-saveRDS(object = predFunc, file = file.path(PATH.OUT, paste0(FILENAME, "_Model.rds")))
+saveRDS(object = predFunc, file = paste0(params$filename, "_Model.rds"))
 ```
 
 # Software

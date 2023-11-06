@@ -3,9 +3,9 @@ note <- sprintf("R package version %s", meta$Version)
 
 bibentry(bibtype="Manual",
          title = "LFApp: Shiny Apps for Lateral Flow Assays",
-         author = personList(person("Filip", "Paskali"), 
-                             person("Weronika", "Schary"), 
-                             person("Matthias", "Kohl")),
+         author = c(as.person("Filip", "Paskali"), 
+                    as.person("Weronika", "Schary"), 
+                    as.person("Matthias", "Kohl")),
          language = "English",
          year = year,
          note = note,

@@ -17,7 +17,7 @@ app_ui <- function(request) {
       useShinyjs(),
       titlePanel("LFA App analysis"),
       tags$style(type='text/css', "#verInfo { float:right; }"),
-      h6(id="verInfo", "v 1.4 (testing)"),
+      h6(id="verInfo", "v 1.4"),
       tabsetPanel(id = "tabs",
                   ## Start of Tab Image Editor
                   tabPanel("Cropping and Segmentation", value = "tab1",

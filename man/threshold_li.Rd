@@ -31,7 +31,7 @@ threshold_li(image, tolerance = NULL, initial_guess = NULL, iter_callback = NULL
   https://doi.org/10.1016/S0167-8655(98)00057-9.
 
 }
-\author{Filip Paskali \email{F.Paskali@hs-furtwangen.de}}
+\author{Filip Paskali \email{Filip.Paskali@gmail.de}}
 \examples{
 library(EBImage)
 x <- readImage(system.file("images", "sample.TIF", package="LFApp"))

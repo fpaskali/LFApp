@@ -16,7 +16,6 @@ core_mobile_ui <- f7Page(
         active = TRUE,
         # Upload file block
         f7Block(
-          hairlines = FALSE,
           strong = TRUE,
           inset = FALSE,
           f7Radio(inputId= "upload", label="Upload image or choose sample", choices=list("Upload image", "Sample"), selected = "Sample"),
@@ -52,7 +51,6 @@ core_mobile_ui <- f7Page(
         ),
         f7Block(
           f7BlockTitle("Set number of strips and number of lines per strip"),
-          hairlines = TRUE,
           strong = TRUE,
           inset = FALSE,
           f7Slider("strips", label="Number of strips", min=1, max=10, value=1, scale=TRUE, scaleSteps=9),
@@ -60,7 +58,6 @@ core_mobile_ui <- f7Page(
         ),
         f7Block(
           f7BlockTitle("Cropping and Segmentation", size="medium"),
-          hairlines = TRUE,
           strong = TRUE,
           inset = FALSE,
           # The content of the tab goes below this
@@ -79,7 +76,6 @@ core_mobile_ui <- f7Page(
         icon = f7Icon("circle_lefthalf_fill"),
         active = FALSE,
         f7Block(
-          hairlines = FALSE,
           strong = TRUE,
           inset = FALSE,
           "Select strip: ",
@@ -125,7 +121,6 @@ core_mobile_ui <- f7Page(
         active = FALSE,
         f7Block(
           f7Accordion(
-            multiCollapse = TRUE,
             f7AccordionItem(
               title = "Upload existing intensity data",
               f7File(inputId = 'intensFile',

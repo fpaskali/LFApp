@@ -266,7 +266,6 @@ analysis_mobile_server <- function(input, output, session){
     output$threshPlots <- renderUI({
       tagList(
         f7Block(
-          hairlines = FALSE,
           strong = TRUE,
           inset = FALSE,
           h3('Background Correction', align = "center"),

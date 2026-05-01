@@ -79,6 +79,9 @@ Finally, one can install package LFApp, where all remaining dependencies will
 be installed automatically.
 
 ```{r}
+## Install package remotes
+if(!requireNamespace("remotes", quietly = TRUE)) 
+  install.packages("remotes")
 ## Install package LFApp
 remotes::install_github("fpaskali/LFApp", build_vignette=TRUE)
 ```

@@ -13,11 +13,18 @@ library(mgcv)
 app_ui <- function(request) {
   tagList(
     fluidPage(
+      tags$head(
+        tags$script(HTML("
+          Shiny.addCustomMessageHandler('openReport', function(url) {
+            window.open(url, '_blank');
+          });
+        "))
+      ),
       theme = shinytheme("sandstone"),
       useShinyjs(),
       titlePanel("LFA App analysis"),
       tags$style(type='text/css', "#verInfo { float:right; }"),
-      h6(id="verInfo", "v 1.4"),
+      h6(id="verInfo", "v 1.4.2"),
       tabsetPanel(id = "tabs",
                   ## Start of Tab Image Editor
                   tabPanel("Cropping and Segmentation", value = "tab1",
@@ -294,7 +301,7 @@ app_ui <- function(request) {
                                checkboxInput("useLog", "Logarithmize concentration", value=FALSE),
                                textAreaInput("respVar", label = "Specify the response variable (R expression)"),
                                textAreaInput("subset", label = "Optional: specify subset (logical R expression)"),
-                               downloadButton("runCali", label = "Run Calibration Analysis"),
+                               actionButton("runCali", label = "Run Calibration Analysis"),
                                hr(style="border-color: black"),
                                h5("For restart with new data", style="font-weight:bold"),
                                actionButton("deleteData3", label = "Delete Data"), br(),
@@ -307,9 +314,12 @@ app_ui <- function(request) {
                   tabPanel("Results", value = "tab6",
                            sidebarLayout(
                              sidebarPanel(
+                               h4("Analysis report"),
+                               actionButton("openReport", label = "View Report", disabled = TRUE),
+                               downloadButton("saveReport", label = "Save Report", disabled = TRUE),
+                               hr(style="border-color: black"),
                                h4("Save calibration model"),
-                               shinyjs::disabled(
-                               downloadButton("saveModel", label = "Save Model"))
+                               downloadButton("saveModel", label = "Save Model", disabled = TRUE)
                              ),
                              mainPanel(
                                h3("Results of Calibration Analysis", style="font-weight:bold"), br(),
@@ -1020,7 +1030,10 @@ app_server <- function( input, output, session ) {
         
         output$intens <- renderDT({
           DF <- IntensData
-          datatable(DF)
+          datatable(DF,
+                    options = list(
+                      scrollX = TRUE
+                    ))
         })
         output$plot3 <- NULL
         output$plot4 <- NULL
@@ -1072,7 +1085,10 @@ app_server <- function( input, output, session ) {
     isolate({
       output$intens <- renderDT({
         DF <- IntensData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -1082,7 +1098,10 @@ app_server <- function( input, output, session ) {
     isolate({
       output$experiment <- renderDT({
         DF <- MergedData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -1092,7 +1111,10 @@ app_server <- function( input, output, session ) {
     isolate({
       output$calibration <- renderDT({
         DF <- CalibrationData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -1114,7 +1136,10 @@ app_server <- function( input, output, session ) {
       )
       IntensData <<- DF
       output$intens <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -1134,7 +1159,10 @@ app_server <- function( input, output, session ) {
       output$calibration <- renderDT({})
       
       output$experiment <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -1151,7 +1179,10 @@ app_server <- function( input, output, session ) {
       CalibrationData <<- DF
       MergedData <<- DF
       output$calibration <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
       updateSelectInput(session = session, "concVar", choices = names(DF))
     })
@@ -1177,7 +1208,10 @@ app_server <- function( input, output, session ) {
         CalibrationData <<- DF
         
         output$experiment <- renderDT({
-          datatable(DF)
+          datatable(DF,
+                    options = list(
+                      scrollX = TRUE
+                    ))
         })
       }
     })
@@ -1189,7 +1223,10 @@ app_server <- function( input, output, session ) {
     CalibrationData <<- DF
     
     output$calibration <- renderDT({
-      datatable(DF)
+      datatable(DF,
+                options = list(
+                  scrollX = TRUE
+                ))
     })
     updateSelectInput(session, "concVar", choices = names(DF))
     updateTabsetPanel(session, "tabs", selected = "tab5")
@@ -1231,7 +1268,10 @@ app_server <- function( input, output, session ) {
       CalibrationData <<- RES
       
       output$calibration <- renderDT({
-        datatable(RES)
+        datatable(RES,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -1260,109 +1300,97 @@ app_server <- function( input, output, session ) {
       }
       
       output$calibration <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
   
   MODELNUM <- 1
   
-  output$runCali <- downloadHandler(
-    filename = "Analysis Report.html",
-    content = function(file) {
-      # flush the output and plots
-      output$LOB <- renderText({})
-      output$LOD <- renderText({})
-      output$LOQ <- renderText({})
-      output$plot5 <- renderPlot({})
+  observeEvent(input$runCali, {
+    # flush the output and plots
+    output$LOB <- renderText({})
+    output$LOD <- renderText({})
+    output$LOQ <- renderText({})
+    output$plot5 <- renderPlot({})
     
-      concVar <- input$concVar
-      respVar <- paste0("(",input$respVar,")")
+    concVar <- input$concVar
+    respVar <- paste0("(",input$respVar,")")
       
-      if(input$useLog){
-        if(input$chosenModel == 3){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
-        }else{
-          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
-        }
-      }else{
-        if(input$chosenModel == 3){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
-        }else{
-          FORMULA <- paste0(respVar, " ~ ", concVar)
-        }
-      }
-      
-      if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "lm"
-      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "loess"
-      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "gam"
+    if(input$useLog){
+      if(input$chosenModel == 3) {
+        k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+        FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
       } else {
-        output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
-          print(paste0("Formula: ",FORMULA))})
-        showNotification("Error in the formula!", duration = 5, type="error")
-        shinyjs::disable("saveModel")
-        updateTabsetPanel(session, "tabs", selected = "tab6")
-        return(NULL)
+        FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
       }
+    } else {
+      if(input$chosenModel == 3) {
+        k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+        FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
+      }else{
+        FORMULA <- paste0(respVar, " ~ ", concVar)
+      }
+    }
+    SUBSET <- input$subset
       
+    try_data <- if(SUBSET == "") CalibrationData else subset(CalibrationData, eval(parse(text=SUBSET)))
+      
+    if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=try_data), silent = TRUE), "try-error")){
+      modelName <- "lm"
+      src <- normalizePath("CalibrationAnalysis(lm).Rmd")
+    } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = try_data), silent = TRUE), "try-error")){
+      modelName <- "loess"
+      src <- normalizePath("CalibrationAnalysis(loess).Rmd")
+    } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = try_data), silent = TRUE), "try-error")){
+      modelName <- "gam"
+      src <- normalizePath("CalibrationAnalysis(gam).Rmd")
+    } else {
+      modelName <- "error"
+      output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
+        print(paste0("Formula: ",FORMULA))})
+      showNotification("Error in the formula!", duration = 5, type="error")
+      updateTabsetPanel(session, "tabs", selected = "tab6")
+    }
+      
+    if (modelName != "error") {
       info <- showNotification(paste("Fitting the model..."), duration = 0, type="message")
-      
-      SUBSET <- input$subset
-      
+        
       FILENAME <<- "Calibration"
-
+  
       header <- c('---',
                   'title: "Calibration Analysis"',
                   'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
                   'output:',
                   '  rmarkdown::html_document:',
+                  '    self_contained: true',
                   '    theme: united',
                   '    highlight: tango',
                   '    toc: true',
                   '    number_sections: true',
                   'params:',
                   paste0('  filename: ', FILENAME),
+                  paste0('  model: ', modelName),
+                  paste0('  concVar: ', concVar),
                   paste0('  formula: ', FORMULA),
+                  if (modelName == "gam") paste0('  k: ', k),
+                  if (SUBSET != "") paste0('  subset: ', SUBSET),
                   '---')
+
+      save(CalibrationData, file = file.path(tempdir(), paste0(FILENAME, "_Data.RData")))
+      template <- readLines(src)
+      write(header, file.path(tempdir(), "ReportAnalysis.Rmd"), append=FALSE)
+      write(template, file.path(tempdir(), "ReportAnalysis.Rmd"), append=TRUE)
       
-      if (input$chosenModel == 1) {
-        src <- normalizePath("CalibrationAnalysis(lm).Rmd")
-        owd <- setwd(tempdir())
-        on.exit(setwd(owd))
-        save(CalibrationData, SUBSET,
-             file = paste0(FILENAME, "_Data.RData"))
-        template <- readLines(src)
-        write(header, file="ReportAnalysis.Rmd", append=FALSE)
-        write(template, file="ReportAnalysis.Rmd", append=TRUE)
-      } else if (input$chosenModel == 2) {
-        src <- normalizePath("CalibrationAnalysis(loess).Rmd")
-        owd <- setwd(tempdir())
-        on.exit(setwd(owd))
-        save(CalibrationData, SUBSET,
-             file = paste0(FILENAME, "_Data.RData"))
-        template <- readLines(src)
-        write(header, file="ReportAnalysis.Rmd", append=FALSE)
-        write(template, file="ReportAnalysis.Rmd", append=TRUE)
-      } else if (input$chosenModel == 3) {
-        src <- normalizePath("CalibrationAnalysis(gam).Rmd")
-        owd <- setwd(tempdir())
-        on.exit(setwd(owd))
-        save(CalibrationData, SUBSET,
-             file = paste0(FILENAME, "_Data.RData"))
-        template <- readLines(src)
-        write(header, file="ReportAnalysis.Rmd", append=FALSE)
-        write(template, file="ReportAnalysis.Rmd", append=TRUE)
-      }
-      out <- rmarkdown::render("ReportAnalysis.Rmd", html_document())
-      file.rename(out,file)
+      rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
+      if (!dir.exists("www")) dir.create("www")
+      file.copy(file.path(tempdir(), "ReportAnalysis.html"), "www/ReportAnalysis.html", overwrite = TRUE)
       
       output$modelSummary <- renderPrint({ fit })
-      
+        
       output$plot5 <- renderPlot({
         modelPlot
       })
@@ -1375,7 +1403,7 @@ app_server <- function( input, output, session ) {
       output$LOQ <- renderText({
         paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
       })
-      
+        
       # Adding the analysis name and model formula to the table
       modelName <- rep(modelName, nrow(CalibrationData))
       modelFormula <- rep(FORMULA, nrow(CalibrationData))
@@ -1396,23 +1424,41 @@ app_server <- function( input, output, session ) {
       DF <- cbind(CalibrationData, modelDF)
       CalibrationData <<- DF
       output$calibration <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE,
+                    autowidth = TRUE
+                  ))
       })
-      
+        
       MODELNUM <<- MODELNUM + 1
-      
+        
       updateTextInput(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
       
       removeNotification(info)
+      showNotification(paste("Calibration completed successfully."), duration = 5, type="message")
       shinyjs::enable("saveModel")
-      
-      updateTabsetPanel(session, "tabs", selected = "tab6")
-    })
+      shinyjs::enable("openReport")
+      shinyjs::enable("saveReport")
+    }
+    updateTabsetPanel(session, "tabs", selected = "tab6")
+  })
+  
+  observeEvent(input$openReport, {
+    session$sendCustomMessage("openReport", "ReportAnalysis.html")
+  })
+  
+  output$saveReport <- downloadHandler(
+    filename = "ReportAnalysis.html",
+    content = function(file) {
+      file.copy(file.path(tempdir(), "ReportAnalysis.html"), file)
+    }
+  )
 
   output$saveModel <- downloadHandler(
     filename= paste0("Model.rds"),
     content = function(file) {
-      saveRDS(object=predFunc, file)
+      file.copy(file.path(tempdir(),paste0(FILENAME,"_Model.rds")), file)
     }
   )
   
@@ -1431,7 +1477,10 @@ app_server <- function( input, output, session ) {
   })
   output$intens <- renderDT({
     DF <- IntensData
-    datatable(DF)
+    datatable(DF,
+              options = list(
+                scrollX = TRUE
+              ))
   })
   output$folder <- renderPrint({
     paste0("Folder for Results: ", parseDirPath(c(wd=fs::path_home()), input$folder))
@@ -1491,14 +1540,20 @@ app_server <- function( input, output, session ) {
           predictData <<- cbind(quanData, calConc)
           output$quant <- renderDT({
             DF <- predictData
-            datatable(DF)
+            datatable(DF,
+                      options = list(
+                        scrollX = TRUE
+                      ))
           })
         } else if(input$quanUpload == 1 && !is.null(IntensData)) {
           calConc <- calFun(IntensData)
           predictData <<- cbind(IntensData, calConc)
           output$quant <- renderDT({
             DF <- predictData
-            datatable(DF)
+            datatable(DF,
+                      options = list(
+                        scrollX = TRUE
+                      ))
           })
         } else {
           output$quant <- renderDT({})

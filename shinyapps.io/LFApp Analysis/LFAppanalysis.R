@@ -303,7 +303,7 @@ app_ui <- function(request) {
                                textAreaInput("respVar", label = "Specify the response variable (R expression)",
                                              placeholder = "e.g. Mean2 / (Mean1 + Mean2)"),
                                textAreaInput("subset", label = "Optional: specify subset (logical R expression)",
-                                             placeholder = "e.g. IL6 > 0"),
+                                             placeholder = "e.g. Background == 'Otsu'"),
                                actionButton("runCali", label = "Run Calibration Analysis"),
                                hr(style="border-color: black"),
                                h5("For restart with new data", style="font-weight:bold"),
@@ -1448,7 +1448,7 @@ app_server <- function( input, output, session ) {
     template <- readLines(src)
     write(header, file.path(tempdir(), "ReportAnalysis.Rmd"), append=FALSE)
     write(template, file.path(tempdir(), "ReportAnalysis.Rmd"), append=TRUE)
-      
+    
     rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
     if (!dir.exists("www")) dir.create("www")
     file.copy(file.path(tempdir(), "ReportAnalysis.html"), "www/ReportAnalysis.html", overwrite = TRUE)
@@ -1520,7 +1520,7 @@ app_server <- function( input, output, session ) {
   )
 
   output$saveModel <- downloadHandler(
-    filename= paste0("Model.rds"),
+    filename= "Model.rds",
     content = function(file) {
       file.copy(file.path(tempdir(),paste0(FILENAME,"_Model.rds")), file)
     }
@@ -1624,7 +1624,7 @@ app_server <- function( input, output, session ) {
             showNotification("There was an issue fitting the model. Please try another model", duration = 10, type="error")
             return()
           })
-          if (is.null(calFun)) return()
+          if (is.null(calConc)) return()
           predictData <<- cbind(quanData, calConc)
           output$quant <- renderDT({
             DF <- predictData
@@ -1638,7 +1638,7 @@ app_server <- function( input, output, session ) {
             showNotification("There was an issue fitting the model. Please try another model", duration = 10, type="error")
             return()
           })
-          if (is.null(calFun)) return()
+          if (is.null(calConc)) return()
           predictData <<- cbind(IntensData, calConc)
           output$quant <- renderDT({
             DF <- predictData

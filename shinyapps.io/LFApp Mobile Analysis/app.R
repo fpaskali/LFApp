@@ -1,12 +1,89 @@
 library(shiny)
 library(shinyMobile)
-library(EBImage)
+library(stats)
 library(DT)
+library(EBImage)
+library(fs)
+library(rmarkdown)
 library(ggplot2)
+library(mgcv)
 
 ui <- f7Page(
   allowPWA=TRUE,
-  title = "LFA mobile app",
+  tags$head(
+    tags$script(HTML("
+              Shiny.addCustomMessageHandler('openReport', function(url) {
+                window.open(url, '_blank');
+              });
+            ")),
+    tags$script("
+              $(document).ready(function() {
+                var plot = document.getElementById('plot1')
+
+                plot.addEventListener('touchmove', function (e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousemove', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchend', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mouseup', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+              })
+            "),
+    tags$style("#plot1 { touch-action: none; }")
+  ),
+  title = "LFA Mobile app",
   f7TabLayout(
     # Maybe the navbar will be removed later.
     navbar = f7Navbar(
@@ -74,75 +151,7 @@ ui <- f7Page(
                      hover = hoverOpts("plot_hover", delay = 5000, clip = TRUE),
                      brush = "plot_brush"),
           h5("Click and drag to select a region of interest. Double click on the selected region to zoom.", align = "center"),
-          uiOutput("cropButtons"),
-          tags$head(
-            tags$script("
-              $(document).ready(function() {
-                var plot = document.getElementById('plot1')
-
-                plot.addEventListener('touchmove', function (e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('mousemove', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-
-                plot.addEventListener('touchstart', function(e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('mousedown', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-
-                plot.addEventListener('touchstart', function(e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-
-                plot.addEventListener('touchend', function(e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('mouseup', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-              })
-            "),
-            tags$style("#plot1 { touch-action: none; }")
-          )
+          uiOutput("cropButtons")
         )
       ),
       f7Tab(
@@ -325,7 +334,8 @@ ui <- f7Page(
               ),
               conditionalPanel(
                 condition = "input.radioPrepro == 'Reshape from long to wide'",
-                f7Text("reshapeCol", label = "Column:", value = "Color"),
+                f7Text("combRepsColSI2", label = "Column with sample information:", value = "Sample"),
+                f7Text("reshapeCol", label = "Reshape attribute column:", value = "Color"),
                 f7Segment(
                   f7Button("reshapeWide", label = "Reshape")
                 )
@@ -341,10 +351,11 @@ ui <- f7Page(
                                      "Local polynomial model (loess)",
                                      "Generalized additive model (gam)"),
                       selected = "Linear model (lm)"),
-              f7TextArea("respVar", label = "Specify response variable (R expresssion)"),
-              f7TextArea("subset", label = "Optional: specify subset (logical R expression)"),
               f7Text("concVar", label = "Specify column with concentration"),
-              # f7Text("concVar", "Specify column with concentration"),
+              f7TextArea("respVar", label = "Specify response variable (R expresssion)",
+                         placeholder = "e.g. Mean2 / (Mean1 + Mean2)"),
+              f7TextArea("subset", label = "Optional: specify subset (logical R expression)",
+                         placeholder = "e.g. Background == 'Otsu'"),
               f7Checkbox("useLog", "Logarithmize concentration", value=FALSE),
               f7Block(
                 strong = TRUE,
@@ -359,7 +370,7 @@ ui <- f7Page(
                 )
               ),
               f7Segment(
-                f7DownloadButton("runCali", label = "Run Calibration Analysis")
+                f7Button("runCali", label = "Run Calibration Analysis")
               )
             )
           ),
@@ -769,7 +780,7 @@ server <- function(input, output, session){
             shinyImageFile$segmentation_list <- segmentation.list
             updateF7Tabs(session=session, id="tabs", selected = "Background")
       } else {
-        f7Toast(text="Error: The grid is out of bounds", position="bottom", session=session)
+        f7Toast(text="Error: The grid is out of bounds", position="top", session=session)
       }
     })
   })
@@ -1185,11 +1196,14 @@ server <- function(input, output, session){
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
       req(input$intensFile)
-      tryCatch(
-        DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = FALSE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$intensFile$datapath, header = TRUE,
+                 check.names = FALSE)
+      }, error = function(e) {
+        f7Toast(text="Error: Invalid intensity file", position="top", session=session)
+        return()
+      })
+      if (is.null(DF)) return()
       IntensData <<- DF
       output$intens <- renderDT({
         datatable(DF)
@@ -1201,19 +1215,19 @@ server <- function(input, output, session){
   recursiveUploadExpFile <- eventReactive(input$expFile,{
     isolate({
       req(input$expFile)
-      tryCatch(
-        DF <- read.csv(input$expFile$datapath, header = TRUE,
-                       check.names = FALSE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$expFile$datapath, header = TRUE,
+                 check.names = FALSE)
+      }, error = function(e) {
+        f7Toast(text="Error: Invalid experiment info file", position="top", session=session)
+        return()
+      })
+      if (is.null(DF)) return()
       ExpInfo <<- DF
       MergedData <<- DF
       suppressWarnings(rm(CalibrationData, pos = 1))
       output$calibration <- renderDT({})
-
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
+      output$experiment <- renderDT({datatable(DF)})
     })
   })
 
@@ -1221,15 +1235,15 @@ server <- function(input, output, session){
   recursiveUploadPrepFile <- eventReactive(input$prepFile,{
     isolate({
       req(input$prepFile)
-      tryCatch(
-        DF <- read.csv(input$prepFile$datapath, header = TRUE,
-                       check.names = FALSE),
-        error = function(e){stop(safeError(e))}
-      )
-      CalibrationData <<- DF
-      output$calibration <- renderDT({
-        datatable(DF)
+      DF <- tryCatch({
+        read.csv(input$prepFile$datapath, header = TRUE,
+                 check.names = FALSE)
+      }, error = function(e) {
+        f7Toast(text="Error: Invalid calibration file", position="top", session=session)
+        return()
       })
+      CalibrationData <<- DF
+      output$calibration <- renderDT({datatable(DF)})
     })
   })
 
@@ -1281,272 +1295,369 @@ server <- function(input, output, session){
       write.csv(CalibrationData, file, row.names = FALSE)
     }
   )
-
-  observe({recursiveCombReps()})
-  recursiveCombReps <- eventReactive(input$combReps,{
-    isolate({
-      Cols <- c(grep("Mean", colnames(MergedData)),
-                grep("Median", colnames(MergedData)))
-      RES <- NULL
-      if(input$colorsBands > 1){
-        DF <- MergedData[,c(input$combRepsColSI, input$combRepsColCL)]
-        DFuni <- DF[!duplicated(DF),]
-        for (i in 1:nrow(DFuni)) {
-          sel <- DF[,1] == DFuni[i,1] & DF[,2] == DFuni[i,2]
-          tmp <- MergedData[sel, ]
-          tmp2 <- tmp[1, ]
-          if (input$radioReps == 1) #mean
-            tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
-          if (input$radioReps == 2) #median
-            tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
-          RES <- rbind(RES, tmp2)
-        }
-      }else{
-        DF <- MergedData[,input$combRepsColSI]
-        for (spl in unique(MergedData[, input$combRepsColSI])) {
-          tmp <- MergedData[DF == spl, ]
-          tmp2 <- tmp[1, ]
-          if (input$radioReps == 1) #mean
-            tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
-          if (input$radioReps == 2) #median
-            tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
-          RES <- rbind(RES, tmp2)
-        }
+  
+  observeEvent(input$combReps,{
+    if (is.null(MergedData)) {
+      f7Toast(text="Error: Calibration data not found", position="top", session=session)
+      return()
+    }
+    if (!input$combRepsColSI %in% colnames(MergedData)) {
+      f7Toast(text="Error: Invalid column name in sample information", position="top", session=session)
+      return()
+    }
+    if (!input$combRepsColCL %in% colnames(MergedData)) {
+      f7Toast(text="Error: Invalid column name in color information", position="top", session=session)
+      return()
+    }
+    Cols <- c(grep("Mean", colnames(MergedData)),
+              grep("Median", colnames(MergedData)))
+    RES <- NULL
+    if(input$colorsBands > 1){
+      DF <- MergedData[,c(input$combRepsColSI, input$combRepsColCL)]
+      DFuni <- DF[!duplicated(DF),]
+      for (i in 1:nrow(DFuni)) {
+        sel <- DF[,1] == DFuni[i,1] & DF[,2] == DFuni[i,2]
+        tmp <- MergedData[sel, ]
+        tmp2 <- tmp[1, ]
+        if (input$radioReps == 1) #mean
+          tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
+        if (input$radioReps == 2) #median
+          tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
+        RES <- rbind(RES, tmp2)
       }
-      rownames(RES) <- 1:nrow(RES)
-      RES <- RES[order(RES[,input$combRepsColSI]),]
-      CalibrationData <<- RES
-
-      output$calibration <- renderDT({
-        datatable(RES)
-      })
-    })
+    } else {
+      DF <- MergedData[,input$combRepsColSI]
+      for (spl in unique(MergedData[, input$combRepsColSI])) {
+        tmp <- MergedData[DF == spl, ]
+        tmp2 <- tmp[1, ]
+        if (input$radioReps == 1) #mean
+          tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
+        if (input$radioReps == 2) #median
+          tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
+        RES <- rbind(RES, tmp2)
+      }
+    }
+    rownames(RES) <- 1:nrow(RES)
+    RES <- RES[order(RES[,input$combRepsColSI]),]
+    CalibrationData <<- RES
+    
+    output$calibration <- renderDT({datatable(RES)})
   })
-
-  observe({recursiveReshapeWide()})
-
-  recursiveReshapeWide <- eventReactive(input$reshapeWide,{
-    isolate({
-      rm.file <- (colnames(CalibrationData) != colnames(MergedData)[1] &
-                    colnames(CalibrationData) != input$reshapeCol)
-      DF.split <- split(CalibrationData[,rm.file], CalibrationData[,input$reshapeCol])
-
-      N <- length(unique(CalibrationData[,input$reshapeCol]))
-      if(N > 1){
+  
+  observeEvent(input$reshapeWide,{
+    if (is.null(MergedData)) {
+      f7Toast(text="Error: Calibration data not found", position="top", session=session)
+      return()
+    }
+    if (!input$reshapeCol %in% colnames(MergedData) | !input$combRepsColSI2 %in% colnames(MergedData)) {
+      f7Toast(text="Error: Unable to reshape data. Please check the specified column names and try again", position="top", session=session)
+      return()
+    }
+    rm.file <- (colnames(CalibrationData) != colnames(MergedData)[1] &
+                  colnames(CalibrationData) != input$reshapeCol)
+    DF.split <- split(CalibrationData[,rm.file], CalibrationData[,input$reshapeCol])
+    
+    N <- length(unique(CalibrationData[,input$reshapeCol]))
+    if(N > 1){
+      tryCatch({
         DF <- DF.split[[1]]
         Cols <- c(grep("Mean", colnames(DF)),
                   grep("Median", colnames(DF)))
-        Cols <- c(Cols, which(colnames(DF) == input$combRepsColSI))
+        Cols <- c(Cols, which(colnames(DF) == input$combRepsColSI2))
         for(i in 2:N){
-          DF <- merge(DF, DF.split[[i]][,Cols], by = input$combRepsColSI,
+          DF <- merge(DF, DF.split[[i]][,Cols], by = input$combRepsColSI2,
                       suffixes = paste0(".", names(DF.split)[c(i-1,i)]))
         }
         CalibrationData <<- DF
-      }else{
-        DF <- CalibrationData
-      }
-
-      output$calibration <- renderDT({
-        datatable(DF)
+      },
+      error = function(e) {
+        f7Toast(text="Error: Unable to reshape data. Please check the specified column names and try again", position="top", session=session)
+        return()
       })
-    })
+    }else{
+      DF <- CalibrationData
+    }
+    output$calibration <- renderDT({datatable(DF)})
   })
 
   MODELNUM <- 1
 
-  output$runCali <- downloadHandler(
-      filename = "Analysis Report.html",
-      content = function(file) {
+  observeEvent(input$runCali, {
+    output$results <- renderUI({
+      f7Block(
+        strong = TRUE,
+        h3("Results of Calibration Analysis"),
+        h4("Calibration model"),
+        verbatimTextOutput("modelSummary"), br(),
+        plotOutput("plot5"), br(),
+        verbatimTextOutput("LOB"),
+        verbatimTextOutput("LOD"),
+        verbatimTextOutput("LOQ")
+      )
+    })
+
+    # flush the output and plots
+    output$LOB <- renderText({})
+    output$LOD <- renderText({})
+    output$LOQ <- renderText({})
+    output$plot5 <- renderPlot({})
+
+    concVar <- input$concVar
+    respVar <- paste0("(",input$respVar,")")
+    
+    if (!input$concVar %in% colnames(CalibrationData)) {
+      f7Toast(text="Error: Concentration column name is not valid", position="top", session=session)
+      return()
+    }
+
+    SUBSET <- input$subset
+    
+    if (SUBSET == "") {
+      try_data <- CalibrationData 
+    } else {
+      try_data <- tryCatch({
+        subset(CalibrationData, eval(parse(text = SUBSET)))
+      }, error = function(e) {
+        output$modelSummary <- renderPrint({
+          print("Subsetting failed.")
+          print("Please verify that the expression is valid and uses correct column names.")
+        })
+        updateF7Tabs(session=session, id="tabs", selected = "Results")
+        return()
+      })
+    }
+    if (is.null(try_data)) return()
+    if (nrow(try_data) < 2) {
+      output$modelSummary <- renderPrint({
+        print("Not enough data to fit the model (at least 2 rows required).")
+      })
+      updateF7Tabs(session=session, id="tabs", selected = "Results")
+      return()
+    }
+    
+    if(input$useLog){
+      if(any(try_data[[concVar]] <= 0)) {
+        output$modelSummary <- renderPrint({
+          print("Log transformation is not possible.")
+          print("The concentration column contains zero or negative values.")
+          print("Please check calibration data and try again.")})
+        updateF7Tabs(session=session, id="tabs", selected = "Results")
+        return()
+      }
+      if(input$chosenModel == "Generalized additive model (gam)"){
+        k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+        FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")
+      } else {
+        FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")
+      }
+    } else {
+      if(input$chosenModel == "Generalized additive model (gam)"){
+        k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+        FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")
+      } else {
+        FORMULA <- paste0(respVar, " ~ ", concVar)
+      }
+    }
+    
+    if(input$chosenModel == "Linear model (lm)" && !inherits(try(lm(as.formula(FORMULA), data=try_data), silent = TRUE), "try-error")){
+      modelName <- "lm"
+      src <- normalizePath("CalibrationAnalysis(lm).Rmd")
+    } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = try_data), silent = TRUE), "try-error")){
+      modelName <- "loess"
+      src <- normalizePath("CalibrationAnalysis(loess).Rmd")
+    } else if(input$chosenModel == "Generalized additive model (gam)" && !inherits(try(gam(as.formula(FORMULA), data = try_data), silent = TRUE), "try-error")){
+      modelName <- "gam"
+      src <- normalizePath("CalibrationAnalysis(gam).Rmd")
+    } else {
       output$results <- renderUI({
         f7Block(
           strong = TRUE,
           h3("Results of Calibration Analysis"),
           h4("Calibration model"),
-          verbatimTextOutput("modelSummary"), br(),
-          plotOutput("plot5"), br(),
-          verbatimTextOutput("LOB"),
-          verbatimTextOutput("LOD"),
-          verbatimTextOutput("LOQ")
+          verbatimTextOutput("modelSummary")
         )
       })
-
-      # flush the output and plots
-      output$LOB <- renderText({})
-      output$LOD <- renderText({})
-      output$LOQ <- renderText({})
-      output$plot5 <- renderPlot({})
-
-      concVar <- input$concVar
-      respVar <- paste0("(",input$respVar,")")
-
-      if(input$useLog){
-        if(input$chosenModel == "Generalized additive model (gam)"){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")
-        }else{
-          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")
-        }
-      }else{
-        if(input$chosenModel == "Generalized additive model (gam)"){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")
-        }else{
-          FORMULA <- paste0(respVar, " ~ ", concVar)
-        }
-      }
-
-
-      if(input$chosenModel == "Linear model (lm)" && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "lm"
-      } else if(input$chosenModel == "Local polynomial model (loess)" && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "loess"
-      } else if(input$chosenModel == "Generalized additive model (gam)" && !inherits(try(gam(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "gam"
-      } else {
-        output$results <- renderUI({
-          f7Block(
-            strong = TRUE,
-            h3("Results of Calibration Analysis"),
-            h4("Calibration model"),
-            verbatimTextOutput("modelSummary")
-          )
-        })
-        output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
-          print(paste0("Formula: ",FORMULA))})
-        f7Toast(text="Error in the formula!", position="top", session=session)
-        output$saveModelButton <- renderUI({})
-        updateF7Tabs(session=session, id="tabs", selected = "Results")
-        return(NULL)
-      }
-
-      f7Toast(text=paste("Fitting the model..."), position="top", session=session)
-
-      SUBSET <- input$subset
-
-      # FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
-
-      # save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-      #      file = paste0(PATH.OUT,"/", FILENAME, "_Data.RData"))
-      if (input$chosenModel == "Linear model (lm)") {
-        src <- normalizePath("CalibrationAnalysis(lm).Rmd")
-        owd <- setwd(tempdir())
-        on.exit(setwd(owd))
-        file.copy(src,
-                  "ReportAnalysis.Rmd", overwrite = TRUE)
-      } else if (input$chosenModel == "Local polynomial model (loess)") {
-        src <- normalizePath("CalibrationAnalysis(loess).Rmd")
-        owd <- setwd(tempdir())
-        on.exit(setwd(owd))
-        file.copy(src,
-                  "ReportAnalysis.Rmd", overwrite = TRUE)
-      } else if (input$chosenModel == "Generalized additive model (gam)") {
-        src <- normalizePath("CalibrationAnalysis(gam).Rmd")
-        owd <- setwd(tempdir())
-        on.exit(setwd(owd))
-        file.copy(src,
-                  "ReportAnalysis.Rmd", overwrite = TRUE)
-      }
-      out <- rmarkdown::render("ReportAnalysis.Rmd", "html_document")
-      file.rename(out,file)
-      # load(file = paste0(PATH.OUT, "/", FILENAME, "Results.RData")) # This line is not necessary, because the parameters are still loaded in the environment.
-
-      predFunc <<- predFunc # make predFunc global for save model feature
-
-      output$modelSummary <- renderPrint({ fit })
-
-      output$plot5 <- renderPlot({
-        modelPlot
-      })
-      output$LOB <- renderText({
-        paste0("Limit of Blank (LOB): ", signif(LOB, 3))
-      })
-      output$LOD <- renderText({
-        paste0("Limit of Detection (LOD): ", signif(LOD, 3))
-      })
-      output$LOQ <- renderText({
-        paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
-      })
-
-      # Adding the analysis name and model formula to the table
-      modelName <- rep(modelName, nrow(CalibrationData))
-      modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      if (input$chosenModel == "Local polynomial model (loess)") {
-        modelDF <- cbind(modelName, modelFormula, fit$fitted)
-      } else {
-        modelDF <- cbind(modelName, modelFormula, fit$fitted.values)
-      }
-      colnames(modelDF) <- c(paste0(input$analysisName, ".model"),
-                             paste0(input$analysisName, ".formula"),
-                             paste0(input$analysisName, ".fit"))
-      CalibrationData <<- cbind(CalibrationData, modelDF)
-      output$calibration <- renderDT({
-        datatable(CalibrationData)
-      })
-
-      MODELNUM <<- MODELNUM + 1
-
-      output$saveModelButton <- renderUI({
-        f7Block(
-          strong = TRUE,
-          h3("Save calibration model"),
-          f7DownloadButton("saveModel", label = "Save Model")
-        )
-      })
-
-      updateF7Text(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
-
+      output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
+        print(paste0("Formula: ",FORMULA))})
+      f7Toast(text="Error in the formula!", position="top", session=session)
+      output$saveModelButton <- renderUI({})
       updateF7Tabs(session=session, id="tabs", selected = "Results")
+      return()
+    }
+    
+    f7Toast(text=paste("Fitting the model..."), position="top", session=session)
+    
+    FILENAME <<- "Calibration"
+    
+    header <- c('---',
+                'title: "Calibration Analysis"',
+                'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
+                'output:',
+                '  rmarkdown::html_document:',
+                '    self_contained: true',
+                '    theme: united',
+                '    highlight: tango',
+                '    toc: true',
+                '    number_sections: true',
+                'params:',
+                paste0('  filename: ', FILENAME),
+                paste0('  model: ', modelName),
+                paste0('  concVar: ', concVar),
+                paste0('  formula: ', FORMULA),
+                if (modelName == "gam") paste0('  k: ', k),
+                if (SUBSET != "") paste0('  subset: ', SUBSET),
+                '---')
+    
+    save(CalibrationData, file = file.path(tempdir(), paste0(FILENAME, "_Data.RData")))
+    template <- readLines(src)
+    write(header, file.path(tempdir(), "ReportAnalysis.Rmd"), append=FALSE)
+    write(template, file.path(tempdir(), "ReportAnalysis.Rmd"), append=TRUE)
+    
+    rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
+    if (!dir.exists("www")) dir.create("www")
+    file.copy(file.path(tempdir(), "ReportAnalysis.html"), "www/ReportAnalysis.html", overwrite=TRUE)
+
+    output$modelSummary <- renderPrint({ fit })
+
+    output$plot5 <- renderPlot({
+      modelPlot
+    })
+    output$LOB <- renderText({
+      paste0("Limit of Blank (LOB): ", signif(LOB, 3))
+    })
+    output$LOD <- renderText({
+      paste0("Limit of Detection (LOD): ", signif(LOD, 3))
+    })
+    output$LOQ <- renderText({
+      paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
     })
 
-  # observe(resetFolder())
-  #
-  # resetFolder <- eventReactive(input$folder,{
-  #   isolate({
-  #     if(substring(input$folder,1,nchar(file.path(fs::path_home()))) != file.path(fs::path_home()))
-  #       updateTextInput(session=session, inputId = "folder", value = file.path(fs::path_home()))
-  #   })
-  # })
+    # Adding the analysis name and model formula to the table
+    modelName <- rep(modelName, nrow(CalibrationData))
+    modelFormula <- rep(FORMULA, nrow(CalibrationData))
+    modelDF <- cbind(modelName, modelFormula, predFunc(CalibrationData))
+    colnames(modelDF) <- c(paste0(input$analysisName, ".model"),
+                           paste0(input$analysisName, ".formula"),
+                           paste0(input$analysisName, ".fit"))
+    if (SUBSET != "") {
+      subsetIndex <- function (x, subset) {
+        e <- substitute(subset)
+        r <- eval(e, x, parent.frame())
+        r & !is.na(r)
+      }
+      Index <- eval(call("subsetIndex", x = CalibrationData,
+                    subset = parse(text = SUBSET)))
+      modelDF[!Index,] <- NA
+    }
+    DF <- cbind(CalibrationData, modelDF)
+    CalibrationData <<- DF
+    output$calibration <- renderDT({
+      datatable(DF)
+    })
 
+    MODELNUM <<- MODELNUM + 1
+
+    output$saveModelButton <- renderUI({
+      f7Block(
+        strong = TRUE,
+        h3("Analysis report"),
+        f7Segment(
+          f7Button("openReport", label = "View Report"),
+          f7DownloadButton("saveReport", label = "Save Report")
+        ),
+        hr(),
+        h3("Save calibration model"),
+        f7DownloadButton("saveModel", label = "Save Model")
+      )
+    })
+
+    updateF7Text(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
+
+    updateF7Tabs(session=session, id="tabs", selected = "Results")
+  })
+
+  observeEvent(input$openReport, {
+    session$sendCustomMessage("openReport", "ReportAnalysis.html")
+  })
+  
+  output$saveReport <- downloadHandler(
+    filename = "ReportAnalysis.html",
+    content = function(file) {
+      file.copy(file.path(tempdir(), "ReportAnalysis.html"), file)
+    }
+  )
+  
   output$saveModel <- downloadHandler(
     filename= "Model.rds",
     content = function(file) {
-      saveRDS(object=predFunc, file)
+      file.copy(file.path(tempdir(),paste0(FILENAME,"_Model.rds")), file)
     }
   )
 
   # Quantification module ------------------------------------------------------
   observeEvent(input$quanData, {
-    quanData <<- read.csv(input$quanData$datapath)
+    tryCatch({
+      quanData <<- read.csv(input$quanData$datapath, header = TRUE,
+                            check.names = TRUE)
+    }, error = function(e) {
+      f7Toast(text="Error: Invalid calibration data", position="top", session=session)
+      return()
+    })
   })
 
   observeEvent(input$model, {
-    calFun <<- readRDS(input$model$datapath)
+    tryCatch({
+      calFun <<- readRDS(input$model$datapath)
+    }, error = function(e) {
+      f7Toast(text="Error: Invalid model loaded", position="top", session=session)
+      return()
+    })
   })
 
   observe({predictConc()})
 
   predictConc <- eventReactive(input$predict, {
-    isolate(
+    isolate({
+      if ((input$quanUpload == "Upload Data" & is.null(quanData)) | (input$quanUpload == "Use Intensity Data" & is.null(IntensData))) {
+        f7Toast(text="Error: No valid intensity data found", position="top", session=session)
+        output$quant <- renderDT({})
+        return()
+      }
       if (!is.null(calFun)) {
-        if (input$quanUpload == "Upload Data" && !is.null(quanData)) {
-          calConc <- calFun(quanData)
+        if (input$quanUpload == "Upload Data") {
+          calConc <- tryCatch({
+            calFun(quanData)
+          },
+          error = function(e) {
+            f7Toast(text="There was an issue fitting the model. Please try another model", position="top", session=session)
+            return()
+          })
+          if (is.null(calConc))
           predictData <<- cbind(quanData, calConc)
           output$quant <- renderDT({
             DF <- predictData
             datatable(DF)
           })
-        } else if(input$quanUpload == "Use Intensity Data" && !is.null(IntensData)) {
-          calConc <- calFun(IntensData)
+        } else if(input$quanUpload == "Use Intensity Data") {
+          calConc <- tryCatch({
+            calFun(IntensData)
+          },
+          error = function(e) {
+            f7Toast(text="Error: There was an issue fitting the model. Please try another model", position="top", session=session)
+            return()
+          })
+          if (is.null(calConc)) return()
           predictData <<- cbind(IntensData, calConc)
           output$quant <- renderDT({
             DF <- predictData
             datatable(DF)
           })
         } else {
+          f7Toast(text="Error: No valid model loaded. Please try again", position="top", session=session)
           output$quant <- renderDT({})
         }
       }
-    )
+    })
   })
 
   #allows user to download prediction

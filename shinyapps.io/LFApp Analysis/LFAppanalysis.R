@@ -282,7 +282,7 @@ app_ui <- function(request) {
                                  hr(style="border-color: black"),
                                  condition = "input.radioPrepro == 3",
                                  textInput("combRepsColSI2", label = "Column with sample information:", value = "Sample"),
-                                 textInput("reshapeCol", label = "Reshape attribute Column:", value = "Color"),
+                                 textInput("reshapeCol", label = "Reshape attribute column:", value = "Color"),
                                  actionButton("reshapeWide", label = "Reshape"),
                                ),
                                hr(style="border-color: black"),

@@ -399,7 +399,7 @@ ui <- f7Page(
           conditionalPanel(
             condition = "input.quanUpload == 'Upload Data'",
             f7File(inputId = 'quanData',
-                   label = 'Upload Image',
+                   label = 'Upload Data',
                    accept = c("csv"))
           )
         ),
@@ -1632,7 +1632,7 @@ server <- function(input, output, session){
             f7Toast(text="There was an issue fitting the model. Please try another model", position="top", session=session)
             return()
           })
-          if (is.null(calConc))
+          if (is.null(calConc)) return()
           predictData <<- cbind(quanData, calConc)
           output$quant <- renderDT({
             DF <- predictData

@@ -3,6 +3,14 @@
 ###############################################################################
 
 ###########################################################
+## Version 1.4.2
+###########################################################
+- Online apps bug fixes and refinments
+- Fixed bugs in calibration and quantification steps
+- Improved error handling and messaging
+- Updated User Manual
+
+###########################################################
 ## Version 1.4.1
 ###########################################################
 - Patch for shinyMobile 2.0.0

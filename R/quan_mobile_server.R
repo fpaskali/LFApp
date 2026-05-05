@@ -217,29 +217,29 @@ quan_mobile_server <- function(input, output, session){
           p$ymax <= dim(shinyImageFile$shiny_img_cropped)[2] &&
           p$xmin >= 0 &&
           p$ymin >= 0) {
-        MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
-        colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
-        rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
+            MAX <- dim(shinyImageFile$shiny_img_cropped)[1:2]
+            colcuts <- seq(p$xmin, p$xmax, length.out = input$strips + 1)
+            rowcuts <- seq(p$ymin, p$ymax, length.out = 2*input$bands)
 
-        segmentation.list <- vector("list", length = input$strips)
-        count <- 0
-        for(i in 1:input$strips){
-          tmp.list <- vector("list", length = 2*input$bands-1)
-          for(j in 1:(2*input$bands-1)){
-            img <- shinyImageFile$shiny_img_final
-            if(length(dim(img)) == 2)
-              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
-            else if(length(dim(img)) == 3)
-              img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
-            tmp.list[[j]] <- img
-          }
-          segmentation.list[[i]] <- tmp.list
-        }
-        shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
-        shinyImageFile$segmentation_list <- segmentation.list
-        updateF7Tabs(session=session, id="tabs", selected = "Background")
+            segmentation.list <- vector("list", length = input$strips)
+            count <- 0
+            for(i in 1:input$strips){
+              tmp.list <- vector("list", length = 2*input$bands-1)
+              for(j in 1:(2*input$bands-1)){
+                img <- shinyImageFile$shiny_img_final
+                if(length(dim(img)) == 2)
+                  img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1]]
+                else if(length(dim(img)) == 3)
+                  img <- img[colcuts[i]:colcuts[i+1], rowcuts[j]:rowcuts[j+1], , drop = FALSE]
+                tmp.list[[j]] <- img
+              }
+              segmentation.list[[i]] <- tmp.list
+            }
+            shinyImageFile$cropping_grid <- list("columns" = colcuts, "rows" = rowcuts)
+            shinyImageFile$segmentation_list <- segmentation.list
+            updateF7Tabs(session=session, id="tabs", selected = "Background")
       } else {
-        f7Toast(text="Error: The grid is out of bounds", position="bottom", session=session)
+        f7Toast(text="Error: The grid is out of bounds", position="top", session=session)
       }
     })
   })
@@ -548,13 +548,13 @@ quan_mobile_server <- function(input, output, session){
                          "Mode" = MODE,
                          "Strip" = input$selectStrip,
                          BG.method, AM, Med,
-                         check.names = TRUE)
+                         check.names = FALSE)
       }else{
         DF <- data.frame("File" = shinyImageFile$filename,
                          "Mode" = NA,
                          "Strip" = input$selectStrip,
                          BG.method, AM, Med,
-                         check.names = TRUE)
+                         check.names = FALSE)
       }
       if(inherits(try(IntensData, silent = TRUE), "try-error"))
         IntensData <<- DF
@@ -608,21 +608,18 @@ quan_mobile_server <- function(input, output, session){
     })
   })
 
-
-  observeEvent(input$intensFile,{
-    output$intens <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
-  })
-
   observe({recursiveUploadIntens()})
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
       req(input$intensFile)
-      tryCatch(
-        DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = TRUE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$intensFile$datapath, header = TRUE,
+                 check.names = FALSE)
+      }, error = function(e) {
+        f7Toast(text="Error: Invalid intensity file", position="top", session=session)
+        return()
+      })
+      if (is.null(DF)) return()
       IntensData <<- DF
       output$intens <- renderDT({
         datatable(DF)
@@ -647,37 +644,68 @@ quan_mobile_server <- function(input, output, session){
 
   # Quantification module ------------------------------------------------------
   observeEvent(input$quanData, {
-    quanData <<- read.csv(input$quanData$datapath)
+    tryCatch({
+      quanData <<- read.csv(input$quanData$datapath, header = TRUE,
+                            check.names = TRUE)
+    }, error = function(e) {
+      f7Toast(text="Error: Invalid calibration data", position="top", session=session)
+      return()
+    })
   })
 
   observeEvent(input$model, {
-    calFun <<- readRDS(input$model$datapath)
+    tryCatch({
+      calFun <<- readRDS(input$model$datapath)
+    }, error = function(e) {
+      f7Toast(text="Error: Invalid model loaded", position="top", session=session)
+      return()
+    })
   })
 
   observe({predictConc()})
 
   predictConc <- eventReactive(input$predict, {
-    isolate(
+    isolate({
+      if ((input$quanUpload == "Upload Data" & is.null(quanData)) | (input$quanUpload == "Use Intensity Data" & is.null(IntensData))) {
+        f7Toast(text="Error: No valid intensity data found", position="top", session=session)
+        output$quant <- renderDT({})
+        return()
+      }
       if (!is.null(calFun)) {
-        if (input$quanUpload == "Upload Data" && !is.null(quanData)) {
-          calConc <- calFun(quanData)
+        if (input$quanUpload == "Upload Data") {
+          calConc <- tryCatch({
+            calFun(quanData)
+          },
+          error = function(e) {
+            f7Toast(text="There was an issue fitting the model. Please try another model", position="top", session=session)
+            return()
+          })
+          if (is.null(calConc)) return()
           predictData <<- cbind(quanData, calConc)
           output$quant <- renderDT({
             DF <- predictData
             datatable(DF)
           })
-        } else if(input$quanUpload == "Use Intensity Data" && !is.null(IntensData)) {
-          calConc <- calFun(IntensData)
+        } else if(input$quanUpload == "Use Intensity Data") {
+          calConc <- tryCatch({
+            calFun(IntensData)
+          },
+          error = function(e) {
+            f7Toast(text="Error: There was an issue fitting the model. Please try another model", position="top", session=session)
+            return()
+          })
+          if (is.null(calConc)) return()
           predictData <<- cbind(IntensData, calConc)
           output$quant <- renderDT({
             DF <- predictData
             datatable(DF)
           })
-        } else {
-          output$quant <- renderDT({})
-        }
+        } 
+      } else {
+        f7Toast(text="Error: No valid model loaded. Please try again", position="top", session=session)
+        output$quant <- renderDT({})
       }
-    )
+    })
   })
 
   #allows user to download prediction

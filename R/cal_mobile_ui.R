@@ -1,5 +1,75 @@
 cal_mobile_ui <- f7Page(
-  title = "LFApp mobile calibration",
+  allowPWA=TRUE,
+  options=list(dark=FALSE),
+  tags$head(
+    tags$script("
+              $(document).ready(function() {
+                var plot = document.getElementById('plot1')
+
+                plot.addEventListener('touchmove', function (e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousemove', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchend', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mouseup', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+              })
+            "),
+    tags$style("#plot1 { touch-action: none; }")
+  ),
+  title = "LFApp Mobile calibration",
   f7TabLayout(
     # Maybe the navbar will be removed later.
     navbar = f7Navbar(
@@ -67,75 +137,7 @@ cal_mobile_ui <- f7Page(
                      hover = hoverOpts("plot_hover", delay = 5000, clip = TRUE),
                      brush = "plot_brush"),
           h5("Click and drag to select a region of interest. Double click on the selected region to zoom.", align = "center"),
-          uiOutput("cropButtons"),
-          tags$head(
-            tags$script("
-              $(document).ready(function() {
-                var plot = document.getElementById('plot1')
-
-                plot.addEventListener('touchmove', function (e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('mousemove', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-
-                plot.addEventListener('touchstart', function(e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('mousedown', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-
-                plot.addEventListener('touchstart', function(e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-
-                plot.addEventListener('touchend', function(e) {
-                  var touch = e.changedTouches[0];
-                  var mouseEvent = new MouseEvent('mouseup', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    screenX: touch.screenX,
-                    screenY: touch.screenY,
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                  })
-                  touch.target.dispatchEvent(mouseEvent);
-                  e.preventDefault()
-                }, { passive: false });
-              })
-            "),
-            tags$style("#plot1 { touch-action: none; }")
-          )
+          uiOutput("cropButtons")
         )
       ),
       f7Tab(
@@ -318,7 +320,8 @@ cal_mobile_ui <- f7Page(
               ),
               conditionalPanel(
                 condition = "input.radioPrepro == 'Reshape from long to wide'",
-                f7Text("reshapeCol", label = "Column:", value = "Color"),
+                f7Text("combRepsColSI2", label = "Column with sample information:", value = "Sample"),
+                f7Text("reshapeCol", label = "Reshape attribute column:", value = "Color"),
                 f7Segment(
                   f7Button("reshapeWide", label = "Reshape")
                 )
@@ -334,9 +337,12 @@ cal_mobile_ui <- f7Page(
                                      "Local polynomial model (loess)",
                                      "Generalized additive model (gam)"),
                       selected = "Linear model (lm)"),
-              f7TextArea("respVar", label = "Specify response variable (R expresssion)"),
-              f7TextArea("subset", label = "Optional: specify subset (logical R expression)"),
-              f7Text("concVar", "Specify column with concentration"),
+              f7Text("concVar", label = "Specify column with concentration",
+                       placeholder = "Enter column with concentration"),
+              f7TextArea("respVar", label = "Specify response variable (R expresssion)",
+                         placeholder = "e.g. Mean2 / (Mean1 + Mean2)"),
+              f7TextArea("subset", label = "Optional: specify subset (logical R expression)",
+                         placeholder = "e.g. Background == 'Otsu'"),
               f7Checkbox("useLog", "Logarithmize concentration", value=FALSE),
               f7Block(
                 strong = TRUE,

@@ -10,6 +10,7 @@ library(mgcv)
 
 ui <- f7Page(
   allowPWA=TRUE,
+  options=list(dark=FALSE),
   tags$head(
     tags$script(HTML("
               Shiny.addCustomMessageHandler('openReport', function(url) {
@@ -351,7 +352,8 @@ ui <- f7Page(
                                      "Local polynomial model (loess)",
                                      "Generalized additive model (gam)"),
                       selected = "Linear model (lm)"),
-              f7Text("concVar", label = "Specify column with concentration"),
+              f7Text("concVar", label = "Specify column with concentration",
+                       placeholder = "Enter column with concentration"),
               f7TextArea("respVar", label = "Specify response variable (R expresssion)",
                          placeholder = "e.g. Mean2 / (Mean1 + Mean2)"),
               f7TextArea("subset", label = "Optional: specify subset (logical R expression)",
@@ -1027,7 +1029,7 @@ server <- function(input, output, session){
             if(input$invert=="Yes") {
               img <- 1-img
             }
-            thr <- threshold_li(img, tolerance=input$tri_offset)
+            thr <- threshold_li(img)
             signal <- EBImage::imageData(img) > thr
             EBImage::imageData(img) <- (EBImage::imageData(img) - thr)*signal
             shinyImageFile$Mean_Intensities[1,count1] <- mean(EBImage::imageData(img)[signal])
@@ -1243,23 +1245,35 @@ server <- function(input, output, session){
         return()
       })
       CalibrationData <<- DF
-      output$calibration <- renderDT({datatable(DF)})
+      MergedData <<- DF
+      output$calibration <- renderDT({datatable(DF,
+                                                class = 'table table-dark')})
     })
   })
 
   observe({recursiveMerge()})
   recursiveMerge <- eventReactive(input$merge,{
     isolate({
-      DF <- merge(ExpInfo, IntensData,
-                  by.x = input$mergeExp,
-                  by.y = input$mergeIntens, all = TRUE)
+      if (is.null(ExpInfo)) {
+        f7Toast(text="Experiment info not found.", position="top", session=session)
+      } else if (is.null(IntensData)) {
+        f7Toast(text="Intensity data not found.", position="top", session=session)
+      } else if (inherits(try(merge(ExpInfo, IntensData,
+                                    by.x = input$mergeExp,
+                                    by.y = input$mergeIntens, all = TRUE), silent = TRUE), "try-error")) {
+        f7Toast(text="Error in the column IDs.", position="top", session=session)
+      } else {
+        DF <- merge(ExpInfo, IntensData,
+                    by.x = input$mergeExp,
+                    by.y = input$mergeIntens, all = TRUE)
 
-      MergedData <<- DF
-      CalibrationData <<- DF
+        MergedData <<- DF
+        CalibrationData <<- DF
 
-      output$experiment <- renderDT({
-        datatable(DF)
-      })
+        output$experiment <- renderDT({
+          datatable(DF)
+        })
+      }
     })
   })
 
@@ -1484,7 +1498,7 @@ server <- function(input, output, session){
       updateF7Tabs(session=session, id="tabs", selected = "Results")
       return()
     }
-    
+
     f7Toast(text=paste("Fitting the model..."), position="top", session=session)
     
     FILENAME <<- "Calibration"
@@ -1665,10 +1679,10 @@ server <- function(input, output, session){
             DF <- predictData
             datatable(DF)
           })
-        } else {
-          f7Toast(text="Error: No valid model loaded. Please try again", position="top", session=session)
-          output$quant <- renderDT({})
-        }
+        } 
+      } else {
+        f7Toast(text="Error: No valid model loaded. Please try again", position="top", session=session)
+        output$quant <- renderDT({})
       }
     })
   })

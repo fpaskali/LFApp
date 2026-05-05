@@ -1,9 +1,79 @@
 core_mobile_ui <- f7Page(
-  title = "Tab Layout",
+  allowPWA=TRUE,
+  options=list(dark=FALSE),
+  tags$head(
+    tags$script("
+              $(document).ready(function() {
+                var plot = document.getElementById('plot1')
+
+                plot.addEventListener('touchmove', function (e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousemove', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchend', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mouseup', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+              })
+            "),
+    tags$style("#plot1 { touch-action: none; }")
+  ),
+  title = "LFApp Mobile core",
   f7TabLayout(
     # Maybe the navbar will be removed later.
     navbar = f7Navbar(
-      title="LFApp mobile analysis"
+      title="LFApp mobile core"
     ),
     # Each tab has it's own content
     f7Tabs(

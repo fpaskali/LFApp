@@ -1,5 +1,75 @@
 quan_mobile_ui <- f7Page(
-  title = "LFA mobile app",
+  allowPWA=TRUE,
+  options=list(dark=FALSE),
+  tags$head(
+    tags$script("
+              $(document).ready(function() {
+                var plot = document.getElementById('plot1')
+
+                plot.addEventListener('touchmove', function (e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousemove', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchstart', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+
+                plot.addEventListener('touchend', function(e) {
+                  var touch = e.changedTouches[0];
+                  var mouseEvent = new MouseEvent('mouseup', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    screenX: touch.screenX,
+                    screenY: touch.screenY,
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  })
+                  touch.target.dispatchEvent(mouseEvent);
+                  e.preventDefault()
+                }, { passive: false });
+              })
+            "),
+    tags$style("#plot1 { touch-action: none; }")
+  ),
+  title = "LFApp mobile quantification",
   f7TabLayout(
     # Maybe the navbar will be removed later.
     navbar = f7Navbar(
@@ -70,7 +140,6 @@ quan_mobile_ui <- f7Page(
           uiOutput("cropButtons")
         )
       ),
-
       f7Tab(
         title = "Background",
         tabName = "Background",
@@ -115,7 +184,6 @@ quan_mobile_ui <- f7Page(
         ),
         uiOutput("threshPlots"),
       ),
-
       f7Tab(
         title = "Intensity Data",
         tabName = "IntensityData",
@@ -161,7 +229,7 @@ quan_mobile_ui <- f7Page(
           conditionalPanel(
             condition = "input.quanUpload == 'Upload Data'",
             f7File(inputId = 'quanData',
-                   label = 'Upload Image',
+                   label = 'Upload Data',
                    accept = c("csv"))
           )
         ),

@@ -1513,7 +1513,20 @@ server <- function(input, output, session){
     write(header, file.path(tempdir(), "ReportAnalysis.Rmd"), append=FALSE)
     write(template, file.path(tempdir(), "ReportAnalysis.Rmd"), append=TRUE)
     
-    rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
+    reportGenerated <- tryCatch({
+      rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
+      TRUE
+    }, error = function(e) {
+      print(e)
+      output$modelSummary <- renderPrint({
+        print("Something went wrong while generating the report.")
+        print("Review your calibration data for errors and try again.")
+      })
+      updateF7Tabs(session=session, id="tabs", selected = "Results")
+      FALSE
+    })
+    if (reportGenerated != TRUE) return()
+    
     if (!dir.exists("www")) dir.create("www")
     file.copy(file.path(tempdir(), "ReportAnalysis.html"), "www/ReportAnalysis.html", overwrite=TRUE)
 

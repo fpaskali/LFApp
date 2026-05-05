@@ -322,7 +322,8 @@ app_ui <- function(request) {
                                downloadButton("saveReport", label = "Save Report", disabled = TRUE),
                                hr(style="border-color: black"),
                                h4("Save calibration model"),
-                               downloadButton("saveModel", label = "Save Model", disabled = TRUE)
+                               downloadButton("saveModel", label = "Save Model", disabled = TRUE),
+                               uiOutput("DebugRmd")
                              ),
                              mainPanel(
                                h3("Results of Calibration Analysis", style="font-weight:bold"), br(),
@@ -1448,8 +1449,30 @@ app_server <- function( input, output, session ) {
     template <- readLines(src)
     write(header, file.path(tempdir(), "ReportAnalysis.Rmd"), append=FALSE)
     write(template, file.path(tempdir(), "ReportAnalysis.Rmd"), append=TRUE)
+    reportGenerated <- tryCatch({
+      rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
+      TRUE
+    }, error = function(e) {
+      print(e)
+      removeNotification(info)
+      output$DebugRmd <- renderUI({
+        tagList(
+          hr(style="border-color: black"),
+          h4("Debug report generation (Advanced)"),
+          downloadButton("saveCalData", "Save Calibration_Data.RData"),
+          downloadButton("saveRmd", "Save ReportAnalysis.Rmd")
+        )
+      })
+      output$modelSummary <- renderPrint({
+        print("Something went wrong while generating the report.")
+        print("Review your calibration data for errors and try again.")
+        print("Advanced users can save ReportAnalysis.Rmd and Calibration_Data.RData file to investigate further")
+      })
+      updateTabsetPanel(session, "tabs", selected = "tab6")
+      FALSE
+    })
+    if (reportGenerated != TRUE) return()
     
-    rmarkdown::render(file.path(tempdir(), "ReportAnalysis.Rmd"), html_document())
     if (!dir.exists("www")) dir.create("www")
     file.copy(file.path(tempdir(), "ReportAnalysis.html"), "www/ReportAnalysis.html", overwrite = TRUE)
       
@@ -1523,6 +1546,20 @@ app_server <- function( input, output, session ) {
     filename= "Model.rds",
     content = function(file) {
       file.copy(file.path(tempdir(),paste0(FILENAME,"_Model.rds")), file)
+    }
+  )
+  
+  output$saveCalData <- downloadHandler(
+    filename = "Calibration_Data.RData",
+    content = function(file) {
+      file.copy(file.path(tempdir(), paste0(FILENAME, "_Data.RData")), file)
+    }
+  )
+  
+  output$saveRmd <- downloadHandler(
+    filename = "ReportAnalysis.Rmd",
+    content = function(file) {
+      file.copy(file.path(tempdir(), "ReportAnalysis.Rmd"), file)
     }
   )
   

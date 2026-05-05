@@ -1,6 +1,6 @@
  
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = FALSE)
 ```
 
 # Import of Data
@@ -44,7 +44,7 @@ We compute the predicted concentration values and determine the inverse of the
 fitted model by spline interpolation.
 ```{r}
 N <- 100 # number of points for interpolation
-conc <- seq(from = 0, to = max(calData[,params$concVar]), len = N)
+conc <- seq(from = min(calData[,params$concVar]), to = max(calData[,params$concVar]), len = N)
 newDF <- data.frame(conc = conc)
 names(newDF) <- params$concVar
 resp <- as.vector(predict(fit, newdata = newDF))

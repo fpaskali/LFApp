@@ -2,7 +2,7 @@
 \alias{threshold_li}
 \title{Li Thresholding Algorithm}
 \description{
-  The function computes a background theshold of an image by using Li's 
+  The function computes a background threshold of an image by using Li's 
   iterative minimum cross entropy method.
 }
 \usage{
@@ -12,7 +12,7 @@ threshold_li(image, tolerance = NULL, initial_guess = NULL, iter_callback = NULL
   \item{image}{ object of class \code{Image} from package EBImage. }
   \item{tolerance}{ optional tolerance threshold.}
   \item{initial_guess}{ optional initial value for the minimization. }
-  \item{iter_callback}{ optional function applied to the minimizsation criterion. }
+  \item{iter_callback}{ optional function applied to the minimization criterion. }
 }
 \details{
   For more details about the method see Li and Lee (1993) as well as 

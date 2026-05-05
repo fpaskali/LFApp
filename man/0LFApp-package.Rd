@@ -7,7 +7,7 @@ Shiny Apps for Lateral Flow Assays.
 }
 \description{
 Shiny apps for the quantitative analysis of images from lateral flow assays (LFAs). 
-The images are segemented and background corrected and color intensities are extracted. 
+The images are segmented and background corrected and color intensities are extracted. 
 The apps can be used to import and export intensity data and to calibrate LFAs by 
 means of linear, loess, or gam models. The calibration models can further be saved 
 and applied to intensity data from new images for determining concentrations.

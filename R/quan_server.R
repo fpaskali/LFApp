@@ -11,11 +11,11 @@ quan_server <- function( input, output, session ) {
   IntensData <- NULL
   ExpInfo <- NULL
   MergedData <- NULL
-  CalibrationData <- NULL
   calFun <- NULL
   quanData <- NULL
-  predictData <- NULL
+  CalibrationData <- NULL
   predFunc <- NULL
+  predictData <- NULL
   
   startAutosave <- reactiveVal(value=FALSE)
   
@@ -553,7 +553,10 @@ quan_server <- function( input, output, session ) {
         
         output$intens <- renderDT({
           DF <- IntensData
-          datatable(DF)
+          datatable(DF,
+                    options = list(
+                      scrollX = TRUE
+                    ))
         })
         output$plot3 <- NULL
         output$plot4 <- NULL
@@ -596,28 +599,31 @@ quan_server <- function( input, output, session ) {
     isolate({
       output$intens <- renderDT({
         DF <- IntensData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
-  })
-  
-  observeEvent(input$intensFile,{
-    output$intens <- renderDT({})
-    suppressWarnings(rm(IntensData, pos = 1))
   })
   
   observe({recursiveUploadIntens()})
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
       req(input$intensFile)
-      tryCatch(
-        DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = TRUE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$intensFile$datapath, header = TRUE,
+                 check.names = TRUE)
+      }, error = function(e) {
+        showNotification("Invalid intensity file.", duration = 10, type = "error")
+        return()
+      })
+      if (is.null(DF)) return()
       IntensData <<- DF
       output$intens <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(scrollX = TRUE)
+                  )
       })
     })
   })
@@ -637,7 +643,13 @@ quan_server <- function( input, output, session ) {
   
   output$intens <- renderDT({
     DF <- IntensData
-    datatable(DF)
+    datatable(DF,
+              options = list(
+                scrollX = TRUE
+              ))
+  })
+  output$folder <- renderPrint({
+    paste0("Folder for Results: ", parseDirPath(c(wd=fs::path_home()), input$folder))
   })
   
   #allows user to download data
@@ -665,37 +677,68 @@ quan_server <- function( input, output, session ) {
   
   # Quantification module ------------------------------------------------------
   observeEvent(input$quanData, {
-    quanData <<- read.csv(input$quanData$datapath)
+    tryCatch({
+      quanData <<- read.csv(input$quanData$datapath, header = TRUE,
+                            check.names = TRUE)
+    }, error = function(e) {
+      showNotification("Invalid calibration data.", duration = 10, type = "error")
+      return()
+    })
   })
   
   observeEvent(input$model, {
-    calFun <<- readRDS(input$model$datapath)
+    tryCatch({
+      calFun <<- readRDS(input$model$datapath)
+    }, error = function(e) {
+      showNotification("Invalid model loaded.", duration = 10, type = "error")
+      return()
+    })
+    
   })
   
   observe({predictConc()})
   
   predictConc <- eventReactive(input$predict, {
-    isolate(
+    isolate({
+      if ((input$quanUpload == 2 & is.null(quanData)) | (input$quanUpload == 1 & is.null(IntensData))) {
+        showNotification("No valid intensity data found", duration = 10, type="error")
+        output$quant <- renderDT({})
+        return()
+      }
       if (!is.null(calFun)) {
-        if (input$quanUpload == 2 && !is.null(quanData)) {
-          calConc <- calFun(quanData)
+        if (input$quanUpload == 2) {
+          calConc <- tryCatch({
+            calFun(quanData)
+          },
+          error = function(e) {
+            showNotification("There was an issue fitting the model. Please try another model", duration = 10, type="error")
+            return()
+          })
+          if (is.null(calConc)) return()
           predictData <<- cbind(quanData, calConc)
           output$quant <- renderDT({
             DF <- predictData
-            datatable(DF)
+            datatable(DF, options = list(scrollX = TRUE))
           })
-        } else if(input$quanUpload == 1 && !is.null(IntensData)) {
-          calConc <- calFun(IntensData)
+        } else if(input$quanUpload == 1) {
+          calConc <- tryCatch({
+            calFun(IntensData)
+          },
+          error = function(e) {
+            showNotification("There was an issue fitting the model. Please try another model", duration = 10, type="error")
+            return()
+          })
+          if (is.null(calConc)) return()
           predictData <<- cbind(IntensData, calConc)
           output$quant <- renderDT({
             DF <- predictData
-            datatable(DF)
+            datatable(DF, options = list(scrollX = TRUE))
           })
-        } else {
-          output$quant <- renderDT({})
         }
+      } else {
+        showNotification("No valid model loaded. Please try again.", duration = 10, type="error")
       }
-    )
+    })
   })
   
   #allows user to download prediction

@@ -1423,9 +1423,9 @@ app_server <- function( input, output, session ) {
     }
       
     info <- showNotification(paste("Fitting the model..."), duration = 0, type="message")
-        
+
     FILENAME <<- "Calibration"
-  
+
     header <- c('---',
                 'title: "Calibration Analysis"',
                 'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
@@ -1477,7 +1477,7 @@ app_server <- function( input, output, session ) {
     file.copy(file.path(tempdir(), "ReportAnalysis.html"), "www/ReportAnalysis.html", overwrite = TRUE)
       
     output$modelSummary <- renderPrint({ fit })
-        
+    
     output$plot5 <- renderPlot({
       modelPlot
     })
@@ -1490,7 +1490,7 @@ app_server <- function( input, output, session ) {
     output$LOQ <- renderText({
       paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
     })
-        
+      
     # Adding the analysis name and model formula to the table
     modelName <- rep(modelName, nrow(CalibrationData))
     modelFormula <- rep(FORMULA, nrow(CalibrationData))

@@ -164,7 +164,7 @@ analysis_ui <- function(request) {
                                actionButton("expInfo", label = "Switch To Experiment Info"),
                                hr(style="border-color: black"),
                                h5("For restart with new data", style="font-weight:bold"),
-                               actionButton("deleteData", label = "Delete Data"), br(),
+                               actionButton("deleteData", label = "Delete Data"), br()
                              ),
                              mainPanel(
                                DTOutput("intens")
@@ -262,7 +262,8 @@ analysis_ui <- function(request) {
                                conditionalPanel(
                                  hr(style="border-color: black"),
                                  condition = "input.radioPrepro == 3",
-                                 textInput("reshapeCol", label = "Column:", value = "Color"),
+                                 textInput("combRepsColSI2", label = "Column with sample information:", value = "Sample"),
+                                 textInput("reshapeCol", label = "Reshape attribute column:", value = "Color"),
                                  actionButton("reshapeWide", label = "Reshape"),
                                ),
                                hr(style="border-color: black"),
@@ -280,8 +281,10 @@ analysis_ui <- function(request) {
                                             selected = 1),
                                selectInput("concVar", "Select column with concentration", choices = ""),
                                checkboxInput("useLog", "Logarithmize concentration", value=FALSE),
-                               textAreaInput("respVar", label = "Specify the response variable (R expression)"),
-                               textAreaInput("subset", label = "Optional: specify subset (logical R expression)"),
+                               textAreaInput("respVar", label = "Specify the response variable (R expression)",
+                                             placeholder = "e.g. Mean2 / (Mean1 + Mean2)"),
+                               textAreaInput("subset", label = "Optional: specify subset (logical R expression)",
+                                             placeholder = "e.g. Background == 'Otsu'"),
                                actionButton("runCali", label = "Run Calibration Analysis"),
                                hr(style="border-color: black"),
                                h5("For restart with new data", style="font-weight:bold"),
@@ -296,7 +299,9 @@ analysis_ui <- function(request) {
                            sidebarLayout(
                              sidebarPanel(
                                h4("Open analysis report"),
-                               actionButton("openReport", label = "Open")
+                               shinyjs::disabled(
+                                 actionButton("openReport", label = "Open")
+                               )
                              ),
                              mainPanel(
                                h3("Results of Calibration Analysis", style="font-weight:bold"), br(),

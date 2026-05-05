@@ -1,6 +1,6 @@
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = FALSE)
 ```
 
 # Import of Data
@@ -14,10 +14,10 @@ y.var <- names(unlist(sapply(colnames(CalibrationData),
                              grep, x = tmp[1])))
 x.var <- names(unlist(sapply(colnames(CalibrationData), 
                               grep, x = tmp[2])))
-if(SUBSET != ""){
-  calData <- eval(call("subset", x =  CalibrationData,
-                       subset = parse(text = SUBSET)))
-}else{
+
+if (!is.null(params$subset)) {
+  calData <- subset(CalibrationData, eval(parse(text = params$subset)))
+} else {
   calData <- CalibrationData
 }
 calData <- calData[,c(y.var, x.var)]
@@ -44,24 +44,23 @@ summary(fit)
 We determine the inverse of the fitted model.
 ```{r}
 ab <- coef(fit)
-names(ab) <- NULL
 predFunc <- function(newdata){}
 body(predFunc) <- substitute({ with(newdata, (eval(y)-a)/b) }, 
                              list(y = parse(text = tmp[1]), 
-                                a = ab[1], 
-                                b = ab[2]))
+                                a = ab[[1]], 
+                                b = ab[[2]]))
 ```
 
 We plot the given concentrations against the fitted values.
 ```{r, warning=FALSE}
 library(ggplot2)
-modelPlot <- ggplot(calData, aes_string(x = tmp[2], y = tmp[1])) +
+modelPlot <- ggplot(calData, aes(x = .data[[params$concVar]],
+                                 y = !!rlang::parse_expr(tmp[1]))) +
             geom_point() + geom_smooth(method = "lm") +
             annotate("text",  x=-Inf, y = Inf,
-            label = substitute(paste(R^2, " = ", R2, ", adj. ", R^2, " = ", adj.R2),
-                              list(R2 = signif(summary(fit)$r.squared,3),
-                              adj.R2 = signif(summary(fit)$adj.r.squared, 3))),
-            vjust=1, hjust=0, size = 5)
+            label = paste0("R² = ", signif(summary(fit)$r.squared, 3),
+                           ", adj. R² = ", signif(summary(fit)$adj.r.squared, 3)),
+            vjust=1, hjust=0, size=5)
 modelPlot
 ```
 

@@ -558,7 +558,10 @@ cal_server <- function( input, output, session ) {
         
         output$intens <- renderDT({
           DF <- IntensData
-          datatable(DF)
+          datatable(DF,
+                    options = list(
+                      scrollX = TRUE
+                    ))
         })
         output$plot3 <- NULL
         output$plot4 <- NULL
@@ -617,7 +620,10 @@ cal_server <- function( input, output, session ) {
     isolate({
       output$intens <- renderDT({
         DF <- IntensData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -627,7 +633,10 @@ cal_server <- function( input, output, session ) {
     isolate({
       output$experiment <- renderDT({
         DF <- MergedData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -637,7 +646,10 @@ cal_server <- function( input, output, session ) {
     isolate({
       output$calibration <- renderDT({
         DF <- CalibrationData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -652,14 +664,19 @@ cal_server <- function( input, output, session ) {
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
       req(input$intensFile)
-      tryCatch(
-        DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = TRUE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$intensFile$datapath, header = TRUE,
+                 check.names = TRUE)
+      }, error = function(e) {
+        showNotification("Invalid intensity file.", duration = 10, type = "error")
+        return()
+      })
+      if (is.null(DF)) return()
       IntensData <<- DF
       output$intens <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(scrollX = TRUE)
+                  )
       })
     })
   })
@@ -668,18 +685,24 @@ cal_server <- function( input, output, session ) {
   recursiveUploadExpFile <- eventReactive(input$expFile,{
     isolate({
       req(input$expFile)
-      tryCatch(
-        DF <- read.csv(input$expFile$datapath, header = TRUE,
-                       check.names = TRUE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$expFile$datapath, header = TRUE,
+                 check.names = TRUE)
+      }, error = function(e) {
+        showNotification("Invalid experiment info file.", duration = 10, type = "error")
+        return()
+      })
+      if (is.null(DF)) return()
       ExpInfo <<- DF
       MergedData <<- DF
       suppressWarnings(rm(CalibrationData, pos = 1))
       output$calibration <- renderDT({})
       
       output$experiment <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -688,15 +711,21 @@ cal_server <- function( input, output, session ) {
   recursiveUploadPrepFile <- eventReactive(input$prepFile,{
     isolate({
       req(input$prepFile)
-      tryCatch(
-        DF <- read.csv(input$prepFile$datapath, header = TRUE,
-                       check.names = TRUE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$prepFile$datapath, header = TRUE,
+                 check.names = TRUE)
+      }, error = function(e) {
+        showNotification("Invalid calibration data.", duration = 10, type = "error")
+        return()
+      })
+      if (is.null(DF)) return()
       CalibrationData <<- DF
       MergedData <<- DF
       output$calibration <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
       updateSelectInput(session = session, "concVar", choices = names(DF))
     })
@@ -722,7 +751,10 @@ cal_server <- function( input, output, session ) {
         CalibrationData <<- DF
         
         output$experiment <- renderDT({
-          datatable(DF)
+          datatable(DF,
+                    options = list(
+                      scrollX = TRUE
+                    ))
         })
       }
     })
@@ -734,219 +766,290 @@ cal_server <- function( input, output, session ) {
     CalibrationData <<- DF
     
     output$calibration <- renderDT({
-      datatable(DF)
+      datatable(DF,
+                options = list(
+                  scrollX = TRUE
+                ))
     })
     updateSelectInput(session, "concVar", choices = names(DF))
     updateTabsetPanel(session, "tabs", selected = "tab5")
   })
   
-  observe({recursiveCombReps()})
-  recursiveCombReps <- eventReactive(input$combReps,{
-    isolate({
-      Cols <- c(grep("Mean", colnames(MergedData)),
-                grep("Median", colnames(MergedData)))
-      RES <- NULL
-      if(input$colorsBands > 1){
-        DF <- MergedData[,c(input$combRepsColSI, input$combRepsColCL)]
-        DFuni <- DF[!duplicated(DF),]
-        for (i in 1:nrow(DFuni)) {
-          sel <- DF[,1] == DFuni[i,1] & DF[,2] == DFuni[i,2]
-          tmp <- MergedData[sel, ]
-          tmp2 <- tmp[1, ]
-          if (input$radioReps == 1) #mean
-            tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
-          if (input$radioReps == 2) #median
-            tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
-          RES <- rbind(RES, tmp2)
-        }
-      }else{
-        DF <- MergedData[,input$combRepsColSI]
-        for (spl in unique(MergedData[, input$combRepsColSI])) {
-          tmp <- MergedData[DF == spl, ]
-          tmp2 <- tmp[1, ]
-          if (input$radioReps == 1) #mean
-            tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
-          if (input$radioReps == 2) #median
-            tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
-          RES <- rbind(RES, tmp2)
-        }
+  observeEvent(input$combReps,{
+    if (is.null(MergedData)) {
+      showNotification("Calibration data not found.", duration = 10, type="error")
+      return()
+    }
+    if (!input$combRepsColSI %in% colnames(MergedData)) {
+      showNotification("Invalid column name in sample information.", duration = 10, type="error")
+      return()
+    }
+    if (!input$combRepsColCL %in% colnames(MergedData)) {
+      showNotification("Invalid column name in color information.", duration = 10, type="error")
+      return()
+    }
+    Cols <- c(grep("Mean", colnames(MergedData)),
+              grep("Median", colnames(MergedData)))
+    RES <- NULL
+    if(input$colorsBands > 1){
+      DF <- MergedData[,c(input$combRepsColSI, input$combRepsColCL)]
+      DFuni <- DF[!duplicated(DF),]
+      for (i in 1:nrow(DFuni)) {
+        sel <- DF[,1] == DFuni[i,1] & DF[,2] == DFuni[i,2]
+        tmp <- MergedData[sel, ]
+        tmp2 <- tmp[1, ]
+        if (input$radioReps == 1) #mean
+          tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
+        if (input$radioReps == 2) #median
+          tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
+        RES <- rbind(RES, tmp2)
       }
-      rownames(RES) <- 1:nrow(RES)
-      RES <- RES[order(RES[,input$combRepsColSI]),]
-      CalibrationData <<- RES
-      
-      output$calibration <- renderDT({
-        datatable(RES)
-      })
+    }else{
+      DF <- MergedData[,input$combRepsColSI]
+      for (spl in unique(MergedData[, input$combRepsColSI])) {
+        tmp <- MergedData[DF == spl, ]
+        tmp2 <- tmp[1, ]
+        if (input$radioReps == 1) #mean
+          tmp2[, Cols] <- colMeans(tmp[, Cols], na.rm = TRUE)
+        if (input$radioReps == 2) #median
+          tmp2[, Cols] <- apply(tmp[, Cols], 2, median, na.rm = TRUE)
+        RES <- rbind(RES, tmp2)
+      }
+    }
+    rownames(RES) <- 1:nrow(RES)
+    RES <- RES[order(RES[,input$combRepsColSI]),]
+    CalibrationData <<- RES
+    
+    output$calibration <- renderDT({
+      datatable(RES,
+                options = list(
+                  scrollX = TRUE
+                ))
     })
   })
   
-  observe({recursiveReshapeWide()})
-  
-  recursiveReshapeWide <- eventReactive(input$reshapeWide,{
-    isolate({
-      rm.file <- (colnames(CalibrationData) != colnames(MergedData)[1] &
-                    colnames(CalibrationData) != input$reshapeCol)
-      DF.split <- split(CalibrationData[,rm.file], CalibrationData[,input$reshapeCol])
-      
-      N <- length(unique(CalibrationData[,input$reshapeCol]))
-      if(N > 1){
+  observeEvent(input$reshapeWide,{
+    if (is.null(MergedData)) {
+      showNotification("Calibration data not found.", duration = 10, type="error")
+      return()
+    }
+    if (!input$reshapeCol %in% colnames(MergedData) | !input$combRepsColSI2 %in% colnames(MergedData)) {
+      showNotification("Unable to reshape data. Please check the specified column names and try again.", duration = 10, type="error")
+      return()
+    }
+    rm.file <- (colnames(CalibrationData) != colnames(MergedData)[1] &
+                  colnames(CalibrationData) != input$reshapeCol)
+    DF.split <- split(CalibrationData[,rm.file], CalibrationData[,input$reshapeCol])
+    
+    N <- length(unique(CalibrationData[,input$reshapeCol]))
+    if(N > 1){
+      tryCatch({
         DF <- DF.split[[1]]
         Cols <- c(grep("Mean", colnames(DF)),
                   grep("Median", colnames(DF)))
-        Cols <- c(Cols, which(colnames(DF) == input$combRepsColSI))
+        Cols <- c(Cols, which(colnames(DF) == input$combRepsColSI2))
         for(i in 2:N){
-          DF <- merge(DF, DF.split[[i]][,Cols], by = input$combRepsColSI,
+          DF <- merge(DF, DF.split[[i]][,Cols], by = input$combRepsColSI2,
                       suffixes = paste0(".", names(DF.split)[c(i-1,i)]))
         }
         CalibrationData <<- DF
-      }else{
-        DF <- CalibrationData
-      }
-      
-      output$calibration <- renderDT({
-        datatable(DF)
+      },
+      error = function(e) {
+        showNotification("Unable to reshape data. Please check the specified column names and try again.", duration = 10, type="error")
+        return()
       })
+    } else {
+      DF <- CalibrationData
+    }
+    
+    output$calibration <- renderDT({
+      datatable(DF,
+                options = list(
+                  scrollX = TRUE
+                ))
     })
   })
   
   MODELNUM <- 1
   
-  observe({recursiveRunCali()})
-  
-  recursiveRunCali <- eventReactive(input$runCali,{
-    isolate({
-      # flush the output and plots
-      output$LOB <- renderText({})
-      output$LOD <- renderText({})
-      output$LOQ <- renderText({})
-      output$plot5 <- renderPlot({})
-      
-      
-      PATH.OUT <- input$folder
-      if (!file.exists(PATH.OUT)) dir.create(PATH.OUT)
-      
-      concVar <- input$concVar
-      respVar <- paste0("(",input$respVar,")")
-      
-      if(input$useLog){
-        if(input$chosenModel == 3){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
-        }else{
-          FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
-        }
-      }else{
-        if(input$chosenModel == 3){
-          k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
-          FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
-        }else{
-          FORMULA <- paste0(respVar, " ~ ", concVar)
-        }
-      }
-      
-      if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "lm"
-      } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "loess"
-      } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = CalibrationData), silent = TRUE), "try-error")){
-        modelName <- "gam"
-      } else {
-        output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
-          print(paste0("Formula: ",FORMULA))})
-        showNotification("Error in the formula!", duration = 5, type="error")
-        updateTabsetPanel(session, "tabs", selected = "tab6")
-        return(NULL)
-      }
-      
-      info <- showNotification(paste("Fitting the model..."), duration = 0, type="message")
-      
-      SUBSET <- input$subset
-      
-      FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
+  observeEvent(input$runCali, {
+    # flush the output and plots
+    output$LOB <- renderText({})
+    output$LOD <- renderText({})
+    output$LOQ <- renderText({})
+    output$plot5 <- renderPlot({})
+    # Disable buttons
+    shinyjs::disable("openReport")
 
-      header <- c('---',
-                  'title: "Calibration Analysis"',
-                  'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
-                  'output:',
-                  '  rmarkdown::html_document:',
-                  '    theme: united',
-                  '    highlight: tango',
-                  '    toc: true',
-                  '    number_sections: true',
-                  'params:',
-                  paste0('  filename: ', file.path(PATH.OUT, FILENAME)),
-                  paste0('  formula: ', FORMULA),
-                  '---')
-      
-      save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
-           file = file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
-      if (input$chosenModel == 1) {
-        template <- readLines(system.file("markdown", "CalibrationAnalysis(lm).Rmd",
-                                          package = "LFApp"))
-        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
-        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
-      } else if (input$chosenModel == 2) {
-        template <- readLines(system.file("markdown", "CalibrationAnalysis(loess)).Rmd",
-                                          package = "LFApp"))
-        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
-        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
-      } else if (input$chosenModel == 3) {
-        template <- readLines(system.file("markdown", "CalibrationAnalysis(gam).Rmd",
-                                          package = "LFApp"))
-        write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
-        write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
+    PATH.OUT <- input$folder
+    if (!file.exists(PATH.OUT)) dir.create(PATH.OUT)
+    
+    concVar <- input$concVar
+    respVar <- paste0("(",input$respVar,")")
+    
+    SUBSET <- input$subset
+    if (SUBSET == "") {
+      try_data <- CalibrationData 
+    } else {
+      try_data <- tryCatch({
+        subset(CalibrationData, eval(parse(text = SUBSET)))
+      }, error = function(e) {
+        output$modelSummary <- renderPrint({
+          print("Subsetting failed.")
+          print("Please verify that the expression is valid and uses correct column names.")
+        })
+        updateTabsetPanel(session, "tabs", selected = "tab6")
+        return()
+      })
+    }
+    if (is.null(try_data)) return()
+    if (nrow(try_data) < 2) {
+      output$modelSummary <- renderPrint({
+        print("Not enough data to fit the model (at least 2 rows required).")
+      })
+      updateTabsetPanel(session, "tabs", selected = "tab6")
+      return()
+    }
+    
+    # Check if log transform is possible and adapt the FORMULA
+    if(input$useLog){
+      if(any(try_data[[concVar]] <= 0)) {
+        output$modelSummary <- renderPrint({
+          print("Log transformation is not possible.")
+          print("The concentration column contains zero or negative values.")
+          print("Please check calibration data and try again.")})
+        updateTabsetPanel(session, "tabs", selected = "tab6")
+        return()
       }
+      if(input$chosenModel == 3) {
+        k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+        FORMULA <- paste0(respVar, " ~ s(log10(", concVar, "), k = ", k, ")")  
+      } else {
+        FORMULA <- paste0(respVar, " ~ log10(", concVar, ")")  
+      }
+    } else {
+      if(input$chosenModel == 3) {
+        k <- ceiling(length(unique(CalibrationData[,concVar]))/2)
+        FORMULA <- paste0(respVar, " ~ s(", concVar, ", k = ", k, ")")  
+      }else{
+        FORMULA <- paste0(respVar, " ~ ", concVar)
+      }
+    }
+    
+    # Check if model can be computed before creating the report.
+    if(input$chosenModel == 1 && !inherits(try(lm(as.formula(FORMULA), data=try_data), silent = TRUE), "try-error")){
+      modelName <- "lm"
+      src <- system.file("markdown", "CalibrationAnalysis(lm).Rmd", package = "LFApp")
+    } else if(input$chosenModel == 2 && !inherits(try(loess(as.formula(FORMULA), data = try_data), silent = TRUE), "try-error")){
+      modelName <- "loess"
+      src <- system.file("markdown", "CalibrationAnalysis(loess).Rmd", package = "LFApp")
+    } else if(input$chosenModel == 3 && !inherits(try(gam(as.formula(FORMULA), data = try_data), silent = TRUE), "try-error")){
+      modelName <- "gam"
+      src <- system.file("markdown", "CalibrationAnalysis(gam).Rmd", package = "LFApp")
+    } else {
+      output$modelSummary <- renderPrint({print("Calibration can not be performed. Please check the formula.");
+        print(paste0("Formula: ",FORMULA))})
+      showNotification("Error in the formula!", duration = 5, type="error")
+      updateTabsetPanel(session, "tabs", selected = "tab6")
+      return()
+    }
       
+    info <- showNotification(paste("Fitting the model..."), duration = 0, type="message")
+
+    FILENAME <<- paste0(format(Sys.time(), "%Y%m%d_%H%M%S_"), input$analysisName)
+
+    header <- c('---',
+                'title: "Calibration Analysis"',
+                'date: "`r format(Sys.time(), \'%d %B %Y\')`"',
+                'output:',
+                '  rmarkdown::html_document:',
+                '    self_contained: true',
+                '    theme: united',
+                '    highlight: tango',
+                '    toc: true',
+                '    number_sections: true',
+                'params:',
+                paste0('  filename: ', file.path(PATH.OUT, FILENAME)),
+                paste0('  model: ', modelName),
+                paste0('  concVar: ', concVar),
+                paste0('  formula: ', FORMULA),
+                if (modelName == "gam") paste0('  k: ', k),
+                if (SUBSET != "") paste0('  subset: ', SUBSET),
+                '---')
+
+    save(CalibrationData, FORMULA, SUBSET, PATH.OUT,
+         file = file.path(PATH.OUT, paste0(FILENAME, "_Data.RData")))
+    template <- readLines(src)
+    write(header, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=FALSE)
+    write(template, file=file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")), append=TRUE)
+    reportGenerated <- tryCatch({
       rmarkdown::render(input = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.Rmd")),
                         output_file = file.path(PATH.OUT, paste0(FILENAME, "_Analysis.html")))
-      
-      output$modelSummary <- renderPrint({ fit })
-      
-      output$plot5 <- renderPlot({
-        modelPlot
-      })
-      output$LOB <- renderText({
-        paste0("Limit of Blank (LOB): ", signif(LOB, 3))
-      })
-      output$LOD <- renderText({
-        paste0("Limit of Detection (LOD): ", signif(LOD, 3))
-      })
-      output$LOQ <- renderText({
-        paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
-      })
-      
-      # Adding the analysis name and model formula to the table
-      modelName <- rep(modelName, nrow(CalibrationData))
-      modelFormula <- rep(FORMULA, nrow(CalibrationData))
-      modelDF <- cbind(modelName, modelFormula, predFunc(CalibrationData))
-      colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
-                             paste0(input$analysisName, ".formula"), 
-                             paste0(input$analysisName, ".", input$concVar, ".fit"))
-      if(SUBSET != ""){
-        subsetIndex <- function (x, subset){
-          e <- substitute(subset)
-          r <- eval(e, x, parent.frame())
-          r & !is.na(r)
-        }
-        Index <- eval(call("subsetIndex", x = CalibrationData, 
-                           subset = parse(text = SUBSET)))
-        modelDF[!Index,] <- NA
-      }
-      DF <- cbind(CalibrationData, modelDF)
-      CalibrationData <<- DF
-      output$calibration <- renderDT({
-        datatable(DF)
-      })
-      
-      MODELNUM <<- MODELNUM + 1
-      
-      updateTextInput(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
-      
+      TRUE
+    }, error = function(e) {
+      print(e)
       removeNotification(info)
-      
+      output$modelSummary <- renderPrint({
+        print("Something went wrong while generating the report.")
+        print("Review your calibration data for errors and try again.")
+        print("Advanced users can check ReportAnalysis.Rmd to investigate further")
+      })
       updateTabsetPanel(session, "tabs", selected = "tab6")
+      FALSE
     })
+    if (reportGenerated != TRUE) return()
+    
+    output$modelSummary <- renderPrint({ fit })
+    
+    output$plot5 <- renderPlot({
+      modelPlot
+    })
+    output$LOB <- renderText({
+      paste0("Limit of Blank (LOB): ", signif(LOB, 3))
+    })
+    output$LOD <- renderText({
+      paste0("Limit of Detection (LOD): ", signif(LOD, 3))
+    })
+    output$LOQ <- renderText({
+      paste0("Limit of Quantification (LOQ): ", signif(LOQ, 3))
+    })
+      
+    # Adding the analysis name and model formula to the table
+    modelName <- rep(modelName, nrow(CalibrationData))
+    modelFormula <- rep(FORMULA, nrow(CalibrationData))
+    modelDF <- cbind(modelName, modelFormula, predFunc(CalibrationData))
+    colnames(modelDF) <- c(paste0(input$analysisName, ".model"), 
+                           paste0(input$analysisName, ".formula"), 
+                           paste0(input$analysisName, ".", input$concVar, ".fit"))
+    if(SUBSET != ""){
+      subsetIndex <- function (x, subset){
+        e <- substitute(subset)
+        r <- eval(e, x, parent.frame())
+        r & !is.na(r)
+      }
+      Index <- eval(call("subsetIndex", x = CalibrationData, 
+                         subset = parse(text = SUBSET)))
+      modelDF[!Index,] <- NA
+    }
+    DF <- cbind(CalibrationData, modelDF)
+    CalibrationData <<- DF
+    output$calibration <- renderDT({
+      datatable(DF,
+                options = list(
+                  scrollX = TRUE,
+                  autowidth = TRUE
+                ))
+    })
+        
+    MODELNUM <<- MODELNUM + 1
+      
+    updateTextInput(session=session, inputId="analysisName", value=paste0("Model", MODELNUM))
+    
+    removeNotification(info)
+    showNotification(paste("Calibration completed successfully."), duration = 5, type="message")
+    shinyjs::enable("openReport")
+
+    updateTabsetPanel(session, "tabs", selected = "tab6")
   })
   
   observe(resetFolder())

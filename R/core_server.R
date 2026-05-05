@@ -162,8 +162,6 @@ core_server <- function( input, output, session ) {
   
   resetImage <- eventReactive(input$reset,{
     isolate({
-      # For now, resetting only the grid is enough. If there is a need of resseting the image
-      # and rotation settings, uncommennt following three lines.
       shinyImageFile$shiny_img_cropped <- shinyImageFile$shiny_img_origin
       shinyImageFile$shiny_img_final <- shinyImageFile$shiny_img_cropped
       output$plot1 <- renderPlot({EBImage::display(shinyImageFile$shiny_img_final, method = "raster")})
@@ -555,7 +553,10 @@ core_server <- function( input, output, session ) {
         
         output$intens <- renderDT({
           DF <- IntensData
-          datatable(DF)
+          datatable(DF,
+                    options = list(
+                      scrollX = TRUE
+                    ))
         })
         output$plot3 <- NULL
         output$plot4 <- NULL
@@ -597,7 +598,10 @@ core_server <- function( input, output, session ) {
     isolate({
       output$intens <- renderDT({
         DF <- IntensData
-        datatable(DF)
+        datatable(DF,
+                  options = list(
+                    scrollX = TRUE
+                  ))
       })
     })
   })
@@ -611,14 +615,19 @@ core_server <- function( input, output, session ) {
   recursiveUploadIntens <- eventReactive(input$intensFile,{
     isolate({
       req(input$intensFile)
-      tryCatch(
-        DF <- read.csv(input$intensFile$datapath, header = TRUE,
-                       check.names = TRUE),
-        error = function(e){stop(safeError(e))}
-      )
+      DF <- tryCatch({
+        read.csv(input$intensFile$datapath, header = TRUE,
+                 check.names = TRUE)
+      }, error = function(e) {
+        showNotification("Invalid intensity file.", duration = 10, type = "error")
+        return()
+      })
+      if (is.null(DF)) return()
       IntensData <<- DF
       output$intens <- renderDT({
-        datatable(DF)
+        datatable(DF,
+                  options = list(scrollX = TRUE)
+                  )
       })
     })
   })
@@ -638,7 +647,13 @@ core_server <- function( input, output, session ) {
   
   output$intens <- renderDT({
     DF <- IntensData
-    datatable(DF)
+    datatable(DF,
+              options = list(
+                scrollX = TRUE
+              ))
+  })
+  output$folder <- renderPrint({
+    paste0("Folder for Results: ", parseDirPath(c(wd=fs::path_home()), input$folder))
   })
   
   #allows user to download data

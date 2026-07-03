@@ -314,7 +314,7 @@ analysis_ui <- function(request) {
                              )
                            )
                   ), # END OF TAB PANEL
-                  tabPanel("Quantification", value = "tab4",
+                  tabPanel("Quantification", value = "tab7",
                            sidebarLayout(
                              sidebarPanel(
                                radioButtons("quanUpload",
